@@ -21,21 +21,36 @@ EntityID ECS_create_entity(ECS* ecs)
         
         // Free entities works like a stack.
         entity = ecs->free_entities[ecs->capacity - ecs->count];
+
+        // Clear old signature.
+        ecs->signatures[entity] = EMPTY_SIGNATURE;
     }
     else
     {
+        // TODO: Grow by some factor to save allocations?
         {
             ecs->count++;
             ecs->capacity++;
 
-            EntityID* temp = realloc(ecs->entities, ecs->capacity * sizeof(EntityID));
-            if (!temp)
+            EntityID* temp_entities = realloc(ecs->entities, ecs->capacity * sizeof(EntityID));
+            if (!temp_entities)
             {
-                printf("FAILED ALLOC FOR ENTITY*.\n");
+                printf("Failed to alloc for ecs->entities.\n");
                 return INVALID_ENTITY;
             }
-            ecs->entities = temp;
-            entity = ecs->count;
+            
+            ecs->entities = temp_entities;
+
+            ComponentsSignature* temp_signatures = realloc(ecs->signatures, ecs->capacity * sizeof(ComponentsSignature));
+            if (!temp_signatures)
+            {
+                printf("Failed to alloc for ecs->signatures.\n");
+                return INVALID_ENTITY;
+            }
+            ecs->signatures = temp_signatures;
+            ecs->signatures[ecs->count - 1] = EMPTY_SIGNATURE; // Initialise new signature to empty.
+
+            entity = ecs->count - 1;
         }
         
         // Grow sparse array for each ComponentList.

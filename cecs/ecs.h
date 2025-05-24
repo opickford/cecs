@@ -32,8 +32,16 @@ TODO: How can we define systems? That's what we really need.
 
 
 
+      Manaing system entities:
+
+      on component add, we must iterate through system signatures and see if the entity's signature matches, 
+      
+
+
+
 */
 
+// TODO: ECS Should manage entity signatures.
 typedef struct
 {
     EntityID* entities;
@@ -41,11 +49,16 @@ typedef struct
     int count;
     int capacity;
 
-    // Components
-    // TODO: Array of ComponentList where eaech index is Component ID?
-    ComponentList Positions;
-    ComponentList Healths;
-    ComponentList Tags;
+    ComponentsSignature* signatures;
+
+    // Component lists
+    // TODO: Array of ComponentList where eaech index is Component ID? (although that's 1,2,4,8...) so would need to map those. bitshift? Do we want this?
+#define X(ComponentT, i) ComponentList ComponentT##s;
+    COMPONENTS_LIST
+#undef X
+
+    
+
 
 } ECS;
 
@@ -53,31 +66,55 @@ void ECS_init(ECS* ecs);
 
 EntityID ECS_create_entity(ECS* ecs);
 
-// TODO: Doesn't even really need ecs here, could be an entity think but feels a bit odd there.
-#define ECS_add_component(ecs, entity_id, ComponentType)  \
-do {                                                      \
-    ComponentList* cl = &((ecs)->##ComponentType##s);     \
-    ComponentList_set_data(ComponentType, cl, entity_id); \
-} while(0)
+// TODO: The ECS or something should manage the system signatures here.
+
+/*
+#define ECS_remove_component(ecs, entity_id, ComponentType) \
+do {
+
+} while(0)*/
 
 
-// TODO: What's nicer? These defines or just functions.
 
+/* Registering a component means to create helper functions for working with the different
+   component types. Functions it defines:
 
+   - ECS_get_ComponentType : Get's the component for the given entity.
+   - ECS_add_ComponentType : Adds a component to an entity, updates any system arrays of entities if 
+                             new signature matches system signature. If the entity already has the 
+                             component, return the existing component.
+
+*/
 #define ECS_register_component(ComponentType) \
 inline ComponentType* ECS_get_##ComponentType(ECS* ecs, EntityID id) \
 {                                                                    \
     ComponentList* cl = &ecs->##ComponentType##s;                    \
                                                                      \
-    int i = cl->id_to_index[id];                                     \
+    const int i = cl->id_to_index[id];                               \
     if (i == -1) return 0;                                           \
     return &((ComponentType*)cl->data)[i];                           \
+}                                                                    \
+inline ComponentType* ECS_add_##ComponentType(ECS* ecs, EntityID id) \
+{                                                                    \
+    ComponentsSignature sig = ecs->signatures[id];                   \
+    if (sig & COMPONENT_SIGNATURE_##ComponentType)                   \
+        return ECS_get_##ComponentType(ecs, id);                     \
+    ComponentList* cl = &(ecs->##ComponentType##s);                  \
+    ComponentList_set_data(ComponentType, cl, id);                   \
+    ecs->signatures[id] |= COMPONENT_SIGNATURE_##ComponentType;      \
+    return ECS_get_##ComponentType(ecs, id);                         \
 }
-
 
 // Register all components.
 #define X(ComponentT, _) ECS_register_component(ComponentT)
 COMPONENTS_LIST
 #undef X
+
+// This shouldn't be called anywhere else so undefine.
+#undef ECS_register_component
+
+
+
+
 
 #endif
