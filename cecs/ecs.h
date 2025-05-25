@@ -67,6 +67,7 @@ System* ECS_add_System(ECS* ecs);
 // TODO: When should we capitalise???????
 EntityID ECS_create_entity(ECS* ecs);
 void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_signature);
+void ECS_on_remove_component(ECS* ecs, EntityID id, ComponentsSignature component_signature);
 
 // TODO: The ECS or something should manage the system signatures here.
 
@@ -115,7 +116,19 @@ inline ComponentType* ECS_add_##ComponentType(ECS* ecs, EntityID id)    \
     ecs->signatures[id] |= COMPONENT_SIGNATURE_##ComponentType;         \
     ECS_on_add_component(ecs, id, COMPONENT_SIGNATURE_##ComponentType); \
     return ECS_get_##ComponentType(ecs, id);                            \
+}                                                                       \
+inline void ECS_remove_##ComponentType(ECS* ecs, EntityID id)           \
+{                                                                       \
+    ComponentsSignature sig = ecs->signatures[id];                      \
+    if (!(sig & COMPONENT_SIGNATURE_##ComponentType))                   \
+        return;                                                         \
+    ComponentList* cl = &(ecs->##ComponentType##s);                     \
+    ComponentList_remove(ComponentType, cl, id);                        \
+    ecs->signatures[id] &= ~COMPONENT_SIGNATURE_##ComponentType;        \
+    ECS_on_remove_component(ecs, id, COMPONENT_SIGNATURE_##ComponentType); \
 }
+
+
 
 // Register all components.
 #define X(ComponentT, _) ECS_register_component(ComponentT)

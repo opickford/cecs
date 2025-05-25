@@ -70,16 +70,25 @@ EntityID ECS_create_entity(ECS* ecs)
             entity = ecs->count - 1;
         }
         
-        // Grow sparse array for each ComponentList.
+        // Grow sparse arrays for each ComponentList.
+        // TODO: If I stored a list of component lists in ECS this would just be a for loop maybe better.
 #define X(ComponentT, _) \
 { \
-    int* temp = realloc(ecs->##ComponentT##s.id_to_index, ecs->capacity * sizeof(int)); \
-    if (!temp) \
-    { \
-        printf("failed to grow " #ComponentT "s\n"); \
-        return INVALID_ENTITY; \
-    } \
-    ecs->##ComponentT##s.id_to_index = temp; \
+    int* temp_id_to_index = realloc(ecs->##ComponentT##s.id_to_index, ecs->capacity * sizeof(int));           \
+    if (!temp_id_to_index)                                                                                    \
+    {                                                                                                         \
+        printf("failed to grow " #ComponentT "s\n");                                                          \
+        return INVALID_ENTITY;                                                                                \
+    }                                                                                                         \
+    ecs->##ComponentT##s.id_to_index = temp_id_to_index;                                                      \
+                                                                                                              \
+    EntityID* temp_index_to_id = realloc(ecs->##ComponentT##s.index_to_id, ecs->capacity * sizeof(EntityID)); \
+    if (!temp_index_to_id)                                                                                    \
+    {                                                                                                         \
+        printf("failed to grow " #ComponentT "s\n");                                                          \
+        return INVALID_ENTITY;                                                                                \
+    }                                                                                                         \
+    ecs->##ComponentT##s.index_to_id = temp_index_to_id;                                                      \
 }
         COMPONENTS_LIST
 #undef X
@@ -102,6 +111,30 @@ void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_s
         if ((system_sig & component_signature) && ((entity_sig & system_sig) == system_sig))
         {
             System_add_entity(system, id);
+        }
+    }
+}
+
+void ECS_on_remove_component(ECS* ecs, EntityID id, ComponentsSignature component_signature)
+{
+    // To figure out if we need to remove an entity from a system, we rely on the fact that if
+    // it has a component, it must be in a system that requires that component.
+    const ComponentsSignature entity_sig = ecs->signatures[id];
+    const ComponentsSignature previous_entity_sig = entity_sig | component_signature;
+
+    for (int i = 0; i < ecs->num_systems; ++i)
+    {
+        System* system = &ecs->systems[i];
+        const ComponentsSignature system_sig = system->signature;
+        
+        // 1) We only care about system's that require the component we just removed.
+        // 2) The old signature must match the system's (otherwise the entity isn't in the system).
+        // 3) The new signature must not match the system's (a required component was removed).
+        if ((system_sig & component_signature) && 
+            ((previous_entity_sig & system_sig) == system_sig) && 
+            ((entity_sig & system_sig) != system_sig))
+        {
+            System_remove_entity(system, id);
         }
     }
 }

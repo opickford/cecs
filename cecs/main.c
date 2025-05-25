@@ -64,6 +64,10 @@ int main()
             Tag* tag = ECS_add_Tag(&ecs, e1);
             strcpy_s(tag->tag, MAX_TAG, "WHAT THE SIGMA!");
         }
+        if (n == 10)
+        {
+            ECS_remove_Position(&ecs, e1);
+        }
         test_system_update(&ecs, test_system);
         
         Sleep(1000);
