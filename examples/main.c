@@ -1,6 +1,4 @@
-﻿#include "ecs.h"
-#include "system.h"
-#include "components.h"
+﻿#include "cecs/ecs.h"
 
 #include <string.h>
 #include <Windows.h> // Sleep
