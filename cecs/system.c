@@ -27,7 +27,8 @@ void System_remove_entity(System* system, EntityID id)
 {
     // TODO: For this to be O(1) we need a map of id to index.
     //       this is annoying though as we then need to grow this array
-    //       when a new entity is added.
+    //       when a new entity is added. - or an actual map/set data structure. 
+    //       I feel like a map for this sort of thing would be pretty simple.
 
     //       For now, just loop through until we find our entity id, if a
     //       performance issue, sort later.

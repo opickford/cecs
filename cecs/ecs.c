@@ -34,50 +34,45 @@ EntityID ECS_create_entity(ECS* ecs)
 {
     EntityID entity;
 
+    ++ecs->num_used_entities;
+
     // Re-use if free Entity.
-    if (ecs->count < ecs->capacity)
-    {
-        ecs->count++;
-        
+    if (ecs->free_entities_count > 0)
+    {   
         // Free entities works like a stack.
-        entity = ecs->free_entities[ecs->capacity - ecs->count];
+        entity = ecs->free_entities[ecs->free_entities_count - 1];
+
+        --ecs->free_entities_count;
 
         // Clear old signature.
         ecs->signatures[entity] = EMPTY_SIGNATURE;
     }
     else
     {
+        
+
+        const int total_created_entities = ecs->num_used_entities + ecs->free_entities_count;
+
         // TODO: Grow by some factor to save allocations?
+        
+        ComponentsSignature* temp_signatures = realloc(ecs->signatures, total_created_entities * sizeof(ComponentsSignature));
+        if (!temp_signatures)
         {
-            ecs->count++;
-            ecs->capacity++;
-
-            EntityID* temp_entities = realloc(ecs->entities, ecs->capacity * sizeof(EntityID));
-            if (!temp_entities)
-            {
-                printf("Failed to alloc for ecs->entities.\n");
-                return INVALID_ENTITY;
-            }
-            
-            ecs->entities = temp_entities;
-
-            ComponentsSignature* temp_signatures = realloc(ecs->signatures, ecs->capacity * sizeof(ComponentsSignature));
-            if (!temp_signatures)
-            {
-                printf("Failed to alloc for ecs->signatures.\n");
-                return INVALID_ENTITY;
-            }
-            ecs->signatures = temp_signatures;
-            ecs->signatures[ecs->count - 1] = EMPTY_SIGNATURE; // Initialise new signature to empty.
-
-            entity = ecs->count - 1;
+            printf("Failed to alloc for ecs->signatures.\n");
+            return INVALID_ENTITY;
         }
+        ecs->signatures = temp_signatures;
+
+        entity = total_created_entities - 1;
+
+        ecs->signatures[entity] = EMPTY_SIGNATURE; // Initialise new signature to empty.
+    
         
         // Grow sparse arrays for each ComponentList.
         // TODO: If I stored a list of component lists in ECS this would just be a for loop maybe better.
 #define X(ComponentT, _) \
 { \
-    int* temp_id_to_index = realloc(ecs->##ComponentT##s.id_to_index, ecs->capacity * sizeof(int));           \
+    int* temp_id_to_index = realloc(ecs->##ComponentT##s.id_to_index, total_created_entities * sizeof(int));           \
     if (!temp_id_to_index)                                                                                    \
     {                                                                                                         \
         printf("failed to grow " #ComponentT "s\n");                                                          \
@@ -85,7 +80,7 @@ EntityID ECS_create_entity(ECS* ecs)
     }                                                                                                         \
     ecs->##ComponentT##s.id_to_index = temp_id_to_index;                                                      \
                                                                                                               \
-    EntityID* temp_index_to_id = realloc(ecs->##ComponentT##s.index_to_id, ecs->capacity * sizeof(EntityID)); \
+    EntityID* temp_index_to_id = realloc(ecs->##ComponentT##s.index_to_id, total_created_entities * sizeof(EntityID)); \
     if (!temp_index_to_id)                                                                                    \
     {                                                                                                         \
         printf("failed to grow " #ComponentT "s\n");                                                          \
@@ -97,6 +92,57 @@ EntityID ECS_create_entity(ECS* ecs)
 #undef X
     }
     return entity;
+}
+
+// TODO: Rename destroy?
+void ECS_remove_entity(ECS* ecs, EntityID id)
+{
+    --ecs->num_used_entities;
+
+    // TODO: test validity of id?
+
+    // Entities don't need to be packed as we will never be iterating over the entities loop.
+
+    // Clear entity signature.
+    const ComponentsSignature sig = ecs->signatures[id];
+    ecs->signatures[id] = EMPTY_SIGNATURE;
+
+    // Grow capacity if needed.
+    if (ecs->free_entities_count == ecs->free_entities_capacity)
+    {
+        // TODO: Grow by factor?
+        ++ecs->free_entities_capacity;
+
+        EntityID* temp_free_entities = realloc(ecs->free_entities, ecs->free_entities_capacity * sizeof(EntityID));
+        if (!temp_free_entities)
+        {
+            printf("failed to grow ecs->free_entities\n");
+            return;
+        }
+        ecs->free_entities = temp_free_entities;
+    }
+
+    // Save the new free entity.
+    ecs->free_entities[ecs->free_entities_count] = id;
+    ++ecs->free_entities_count;
+
+    // Remove entity from all systems.
+    for (int i = 0; i < ecs->num_systems; ++i)
+    {
+        System* system = &ecs->systems[i];
+        if ((sig & system->signature) == system->signature)
+        {
+            System_remove_entity(system, id);
+        }
+    }
+
+    // Remove components.
+#define X(ComponentT, _) ECS_remove_##ComponentT(ecs, id);
+    COMPONENTS_LIST
+#undef X
+
+
+
 }
 
 void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_signature)

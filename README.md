@@ -18,3 +18,4 @@ An Entity Component System in C, specifically designed for my game/game engine h
 	- [ ] Sort out CMakeLists
 	- [ ] Sort out directory structure
 	- [ ] Add maximum warning level
+	- [ ] Replace debug prints to return some sort of status.

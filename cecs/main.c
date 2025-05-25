@@ -23,6 +23,8 @@ void test_system_update(ECS* ecs, System* system)
     printf("\n");
 }
 
+// TODO: Write some tests for this and restrucutre everything.
+
 int main()
 {
     ECS ecs;
@@ -70,6 +72,18 @@ int main()
         {
             ECS_remove_Position(&ecs, e1);
         }
+        if (n == 15)
+        {
+            ECS_remove_entity(&ecs, e0);
+        }
+        if (n == 20)
+        {
+            e0 = ECS_create_entity(&ecs);
+            ECS_add_Position(&ecs, e0);
+            ECS_add_Tag(&ecs, e0);
+            
+        }
+       
         test_system_update(&ecs, test_system);
         
         Sleep(1000);

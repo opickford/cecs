@@ -8,10 +8,11 @@
 
 typedef struct
 {
-    EntityID* entities;
+    int num_used_entities;
+    
     EntityID* free_entities;
-    int count;
-    int capacity;
+    int free_entities_count;
+    int free_entities_capacity;
 
     ComponentsSignature* signatures;
 
@@ -31,6 +32,9 @@ SystemID ECS_add_System(ECS* ecs);
 
 // TODO: When should we capitalise???????
 EntityID ECS_create_entity(ECS* ecs);
+void ECS_remove_entity(ECS* ecs, EntityID id);
+
+// TODO: Rename component_signature arg to better specify.
 void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_signature);
 void ECS_on_remove_component(ECS* ecs, EntityID id, ComponentsSignature component_signature);
 
