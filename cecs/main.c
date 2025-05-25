@@ -79,9 +79,11 @@ int main()
         if (n == 20)
         {
             e0 = ECS_create_entity(&ecs);
-            ECS_add_Position(&ecs, e0);
-            ECS_add_Tag(&ecs, e0);
-            
+            Position* p = ECS_add_Position(&ecs, e0);
+            p->x = 0;
+            p->y = 0;
+            p->z = 0;
+            strcpy_s(ECS_add_Tag(&ecs, e0)->tag, MAX_TAG, "NEW!");
         }
        
         test_system_update(&ecs, test_system);

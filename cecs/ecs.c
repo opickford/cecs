@@ -136,12 +136,11 @@ void ECS_remove_entity(ECS* ecs, EntityID id)
         }
     }
 
-    // Remove components.
+    // Try remove all components, if component doesn't exist for entity 
+    // it will just be ignored.
 #define X(ComponentT, _) ECS_remove_##ComponentT(ecs, id);
     COMPONENTS_LIST
 #undef X
-
-
 
 }
 
