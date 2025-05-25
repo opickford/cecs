@@ -10,6 +10,23 @@ void ECS_init(ECS* ecs)
     memset(ecs, 0, sizeof(ECS));
 }
 
+System* ECS_add_System(ECS* ecs)
+{
+    System* temp = realloc(ecs->systems, sizeof(System) * (ecs->num_systems + 1));
+    if (!temp)
+    {
+        printf("ECS_add_system failed to realloc.\n");
+        return;
+    }
+    ecs->systems = temp;
+
+    System* system = &ecs->systems[ecs->num_systems];
+    System_init(system);
+    ++ecs->num_systems;
+
+    return system;
+}
+
 EntityID ECS_create_entity(ECS* ecs)
 {
     EntityID entity;
@@ -68,4 +85,23 @@ EntityID ECS_create_entity(ECS* ecs)
 #undef X
     }
     return entity;
+}
+
+void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_signature)
+{
+    // To figure out if a system already has an entity, we're just relying on the fact
+    // that if we added a component to an entity, then it cannot be in a system with that
+    // component.
+
+    const ComponentsSignature entity_sig = ecs->signatures[id];
+
+    for (int i = 0; i < ecs->num_systems; ++i)
+    {
+        System* system = &ecs->systems[i];
+        const ComponentsSignature system_sig = system->signature;
+        if ((system_sig & component_signature) && ((entity_sig & system_sig) == system_sig))
+        {
+            System_add_entity(system, id);
+        }
+    }
 }

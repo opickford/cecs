@@ -17,3 +17,4 @@ An Entity Component System in C, specifically designed for my game/game engine h
 	- [ ] Prefix stuff with some sort of library name.
 	- [ ] Sort out CMakeLists
 	- [ ] Sort out directory structure
+	- [ ] Add maximum warning level

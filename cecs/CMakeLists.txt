@@ -3,7 +3,7 @@
 #
 
 # Add source to this project's executable.
-add_executable (cecs "main.c" "ecs.c" "ecs.h" "components.h" "component_list.h" "system.h" "entity.h")
+add_executable (cecs "main.c" "ecs.c" "system.c")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET cecs PROPERTY CXX_STANDARD 20)

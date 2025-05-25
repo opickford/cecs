@@ -4,7 +4,7 @@
 #include "entity.h"
 #include "components.h"
 #include "component_list.h"
-
+#include "system.h"
 
 
 /*
@@ -41,7 +41,6 @@ TODO: How can we define systems? That's what we really need.
 
 */
 
-// TODO: ECS Should manage entity signatures.
 typedef struct
 {
     EntityID* entities;
@@ -57,14 +56,17 @@ typedef struct
     COMPONENTS_LIST
 #undef X
 
-    
-
+    System* systems;
+    int num_systems;
 
 } ECS;
 
 void ECS_init(ECS* ecs);
+System* ECS_add_System(ECS* ecs);
 
+// TODO: When should we capitalise???????
 EntityID ECS_create_entity(ECS* ecs);
+void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_signature);
 
 // TODO: The ECS or something should manage the system signatures here.
 
@@ -84,25 +86,35 @@ do {
                              new signature matches system signature. If the entity already has the 
                              component, return the existing component.
 
+
+
+    need to do on entity add component
+    for system in systems
+        if entity sig == system sig 
+            add entity id to systems entites
+
+    so how do we register a system? Can we create an array of the systems?
+
 */
 #define ECS_register_component(ComponentType) \
-inline ComponentType* ECS_get_##ComponentType(ECS* ecs, EntityID id) \
-{                                                                    \
-    ComponentList* cl = &ecs->##ComponentType##s;                    \
-                                                                     \
-    const int i = cl->id_to_index[id];                               \
-    if (i == -1) return 0;                                           \
-    return &((ComponentType*)cl->data)[i];                           \
-}                                                                    \
-inline ComponentType* ECS_add_##ComponentType(ECS* ecs, EntityID id) \
-{                                                                    \
-    ComponentsSignature sig = ecs->signatures[id];                   \
-    if (sig & COMPONENT_SIGNATURE_##ComponentType)                   \
-        return ECS_get_##ComponentType(ecs, id);                     \
-    ComponentList* cl = &(ecs->##ComponentType##s);                  \
-    ComponentList_set_data(ComponentType, cl, id);                   \
-    ecs->signatures[id] |= COMPONENT_SIGNATURE_##ComponentType;      \
-    return ECS_get_##ComponentType(ecs, id);                         \
+inline ComponentType* ECS_get_##ComponentType(ECS* ecs, EntityID id)    \
+{                                                                       \
+    ComponentList* cl = &ecs->##ComponentType##s;                       \
+                                                                        \
+    const int i = cl->id_to_index[id];                                  \
+    if (i == -1) return 0;                                              \
+    return &((ComponentType*)cl->data)[i];                              \
+}                                                                       \
+inline ComponentType* ECS_add_##ComponentType(ECS* ecs, EntityID id)    \
+{                                                                       \
+    ComponentsSignature sig = ecs->signatures[id];                      \
+    if (sig & COMPONENT_SIGNATURE_##ComponentType)                      \
+        return ECS_get_##ComponentType(ecs, id);                        \
+    ComponentList* cl = &(ecs->##ComponentType##s);                     \
+    ComponentList_set_data(ComponentType, cl, id);                      \
+    ecs->signatures[id] |= COMPONENT_SIGNATURE_##ComponentType;         \
+    ECS_on_add_component(ecs, id, COMPONENT_SIGNATURE_##ComponentType); \
+    return ECS_get_##ComponentType(ecs, id);                            \
 }
 
 // Register all components.
