@@ -40,6 +40,8 @@ void System_remove_entity(System* system, EntityID id)
             // Swap with one at end.
             const EntityID end_id = system->entities[system->num_entities - 1];
             system->entities[i] = end_id;
+
+            --system->num_entities;
             break;
         }
     }
