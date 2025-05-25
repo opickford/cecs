@@ -64,8 +64,7 @@ int main()
             p->x = -10;
             p->y = -10;
             p->z = -10;
-            Tag* tag = ECS_add_Tag(&ecs, e1);
-            strcpy_s(tag->tag, MAX_TAG, "WHAT THE SIGMA!");
+            strcpy_s(ECS_add_Tag(&ecs, e1)->tag, MAX_TAG, "WHAT THE SIGMA!");
         }
         if (n == 10)
         {
