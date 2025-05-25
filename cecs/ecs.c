@@ -10,21 +10,24 @@ void ECS_init(ECS* ecs)
     memset(ecs, 0, sizeof(ECS));
 }
 
-System* ECS_add_System(ECS* ecs)
+SystemID ECS_add_System(ECS* ecs)
 {
-    System* temp = realloc(ecs->systems, sizeof(System) * (ecs->num_systems + 1));
+    System* temp = realloc(ecs->systems, sizeof(System) * (size_t)(ecs->num_systems + 1));
     if (!temp)
     {
         printf("ECS_add_system failed to realloc.\n");
-        return;
+        return INVALID_SYSTEM_ID;
     }
     ecs->systems = temp;
 
-    System* system = &ecs->systems[ecs->num_systems];
+    SystemID system_id = ecs->num_systems;
+    System* system = &ecs->systems[system_id];
     System_init(system);
     ++ecs->num_systems;
 
-    return system;
+    // TODO: To get around using systemids rather than pointers, we could just preallocate
+    //       for the number of systems we want.
+    return system_id;
 }
 
 EntityID ECS_create_entity(ECS* ecs)

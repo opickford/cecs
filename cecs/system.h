@@ -5,6 +5,7 @@
 #include "components.h"
 
 #include <string.h>
+#include <stdint.h>
 
 /*
 
@@ -20,7 +21,8 @@ TODO: We need some sort of manager to manage the entities here.
 
 */
 
-
+typedef uint32_t SystemID;
+#define INVALID_SYSTEM_ID UINT32_MAX
 
 typedef struct
 {

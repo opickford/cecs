@@ -30,8 +30,8 @@ int main()
 
     // TODO: This pointer obviously going invalid, is there a way to do this at compile time? IDK.
     // TODO: Or we just return an index 'SystemID'.
-    System* test_system = ECS_add_System(&ecs);
-    test_system->signature = COMPONENT_SIGNATURE_Position | COMPONENT_SIGNATURE_Tag;
+    SystemID test_system_id = ECS_add_System(&ecs);
+    ecs.systems[test_system_id].signature = COMPONENT_SIGNATURE_Position | COMPONENT_SIGNATURE_Tag;
 
     EntityID e0 = ECS_create_entity(&ecs);
     EntityID e1 = ECS_create_entity(&ecs);
@@ -52,6 +52,9 @@ int main()
     printf("%d\n", ecs.signatures[e1]);
    
     int n = 0;
+
+    // All systems added so pointers valid.
+    System* test_system = &ecs.systems[test_system_id];
 
     while (1)
     {

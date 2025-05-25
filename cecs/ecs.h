@@ -62,7 +62,7 @@ typedef struct
 } ECS;
 
 void ECS_init(ECS* ecs);
-System* ECS_add_System(ECS* ecs);
+SystemID ECS_add_System(ECS* ecs);
 
 // TODO: When should we capitalise???????
 EntityID ECS_create_entity(ECS* ecs);
