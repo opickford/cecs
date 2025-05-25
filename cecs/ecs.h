@@ -6,41 +6,6 @@
 #include "component_list.h"
 #include "system.h"
 
-
-/*
-Should define sparse sets for component lists,
-
-
-TODO: How can we define systems? That's what we really need.
-      Systems need multiple components, so we could define a group of components,
-      when we add/remove a component, if an entity has components that match what
-      a system needs (a group) add it to the list of entity ids for that 
-      system?
-      
-      i think this is an okay system:
-      - how do we define groups?
-
-      look here: https://ajmmertens.medium.com/building-an-ecs-1-where-are-my-entities-and-components-63d07c7da742
-
-      need to define a system, that defines requirements...
-
-      system iterates component sets? like render system iterates transform and
-      mesh instance
-
-      how do we define a map for it..... how do we keep the components together.
-      do we keep the entity ids or comps.
-
-
-
-      Manaing system entities:
-
-      on component add, we must iterate through system signatures and see if the entity's signature matches, 
-      
-
-
-
-*/
-
 typedef struct
 {
     EntityID* entities;
@@ -69,34 +34,20 @@ EntityID ECS_create_entity(ECS* ecs);
 void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_signature);
 void ECS_on_remove_component(ECS* ecs, EntityID id, ComponentsSignature component_signature);
 
-// TODO: The ECS or something should manage the system signatures here.
-
-/*
-#define ECS_remove_component(ecs, entity_id, ComponentType) \
-do {
-
-} while(0)*/
-
-
-
 /* Registering a component means to create helper functions for working with the different
    component types. Functions it defines:
 
    - ECS_get_ComponentType : Get's the component for the given entity.
+
    - ECS_add_ComponentType : Adds a component to an entity, updates any system arrays of entities if 
                              new signature matches system signature. If the entity already has the 
                              component, return the existing component.
 
-
-
-    need to do on entity add component
-    for system in systems
-        if entity sig == system sig 
-            add entity id to systems entites
-
-    so how do we register a system? Can we create an array of the systems?
-
+   - ECS_remove_ComponentType : Removes a component from an entity, updates any system arrays of
+                                entities if the signatures no longer match.
 */
+
+
 #define ECS_register_component(ComponentType) \
 inline ComponentType* ECS_get_##ComponentType(ECS* ecs, EntityID id)    \
 {                                                                       \

@@ -40,15 +40,6 @@ do {                                                                         \
     (component_list)->count++;                                               \
 } while (0)
 
-/*
-
-to remove....
-
-
-
-
-*/
-
 #define ComponentList_remove(ComponentType, component_list, id)                                        \
 do                                                                                                     \
 {                                                                                                      \
