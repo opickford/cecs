@@ -49,8 +49,6 @@ EntityID ECS_create_entity(ECS* ecs)
     }
     else
     {
-        
-
         const int total_created_entities = ecs->num_used_entities + ecs->free_entities_count;
 
         // TODO: Grow by some factor to save allocations?
@@ -70,6 +68,7 @@ EntityID ECS_create_entity(ECS* ecs)
         
         // Grow sparse arrays for each ComponentList.
         // TODO: If I stored a list of component lists in ECS this would just be a for loop maybe better.
+
 #define X(ComponentT, _) \
 { \
     int* temp_id_to_index = realloc(ecs->##ComponentT##s.id_to_index, total_created_entities * sizeof(int));           \
