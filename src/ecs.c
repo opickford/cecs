@@ -376,11 +376,14 @@ void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
     }
 }
 
-inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype, EntityID eid)
+inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype, 
+    EntityID eid)
 {
     // Create space for the new entity, or reuse spare capacity
     if (archetype->entity_count == archetype->entity_capacity)
     {
+        ++archetype->entity_capacity;
+
         // Grow each component list.
         for (int i = 0; i < archetype->signature.num_components; ++i)
         {

@@ -39,6 +39,7 @@ TODO:
 // TODO: How do we fix this.
 ComponentID position_component;
 ComponentID velocity_component;
+ComponentID health_component;
 
 typedef struct
 {
@@ -49,6 +50,12 @@ typedef struct
 {
     float vx, vy, vz;
 } Velocity;
+
+typedef struct
+{
+    int current;
+    int max;
+} Health;
 
 void test_system_func(ECS* ecs, System* system)
 {
@@ -102,6 +109,7 @@ int main()
 
     position_component = ECS_register_component(&ecs, sizeof(Position));
     velocity_component = ECS_register_component(&ecs, sizeof(Velocity));
+    health_component = ECS_register_component(&ecs, sizeof(Health));
 
     // Register a test system that uses both components.
     // TODO: Make nicer somehow idk?
@@ -137,6 +145,8 @@ int main()
 
     EntityID e1 = ECS_create_entity(&ecs);
     ECS_add_component(&ecs, e1, velocity_component);
+    ECS_add_component(&ecs, e1, position_component);
+    //ECS_add_component(&ecs, e1, health_component);
 
     // TODO: Make a func pointer in the system and let ecs tick.
     test_system_func(&ecs, test_system);
