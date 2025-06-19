@@ -1,33 +1,35 @@
 #include "ecs.h"
 
-#include "components.h"
-
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void ECS_init(ECS* ecs)
 {
     memset(ecs, 0, sizeof(ECS));
 }
 
-SystemID ECS_add_System(ECS* ecs)
+ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
 {
-    System* temp = realloc(ecs->systems, sizeof(System) * (size_t)(ecs->num_systems + 1));
+    ComponentInfo* temp = realloc(ecs->component_infos, 
+        (size_t)(ecs->num_components + 1) * sizeof(ComponentInfo));
+
     if (!temp)
     {
-        printf("ECS_add_system failed to realloc.\n");
-        return INVALID_SYSTEM_ID;
+        // TODO: handle failure.
+        return -1;
     }
-    ecs->systems = temp;
+    ecs->component_infos = temp;
 
-    SystemID system_id = ecs->num_systems;
-    System* system = &ecs->systems[system_id];
-    System_init(system);
-    ++ecs->num_systems;
+    // Store the size of the component for resizing archetype arrays.
+    ecs->component_infos[ecs->num_components].size = component_size;
+    ecs->component_infos[ecs->num_components].id = ecs->num_components; // TODO: Do we need this?
 
-    // TODO: To get around using systemids rather than pointers, we could just preallocate
-    //       for the number of systems we want.
-    return system_id;
+    const ComponentID cid = ecs->num_components;
+
+    ++ecs->num_components;
+
+    return cid;
 }
 
 EntityID ECS_create_entity(ECS* ecs)
@@ -38,73 +40,56 @@ EntityID ECS_create_entity(ECS* ecs)
 
     // Re-use if free Entity.
     if (ecs->free_entities_count > 0)
-    {   
+    {
         // Free entities works like a stack.
         entity = ecs->free_entities[ecs->free_entities_count - 1];
 
         --ecs->free_entities_count;
-
-        // Clear old signature.
-        ecs->signatures[entity] = EMPTY_SIGNATURE;
     }
     else
     {
         const int total_created_entities = ecs->num_used_entities + ecs->free_entities_count;
 
         // TODO: Grow by some factor to save allocations?
-        
-        ComponentsSignature* temp_signatures = realloc(ecs->signatures, total_created_entities * sizeof(ComponentsSignature));
-        if (!temp_signatures)
+        ComponentsBitset* temp_bitsets = realloc(ecs->entity_components_bitsets,
+            total_created_entities * sizeof(ComponentsBitset));
+
+        if (!temp_bitsets)
         {
-            printf("Failed to alloc for ecs->signatures.\n");
+            printf("Failed to alloc for ecs->entity_components_bitsets.\n");
             return INVALID_ENTITY;
         }
-        ecs->signatures = temp_signatures;
+        ecs->entity_components_bitsets = temp_bitsets;
 
-        entity = total_created_entities - 1;
+        int* temp_indices = realloc(ecs->entity_indices, 
+            total_created_entities * sizeof(int));
+        if (!temp_indices)
+        {
+            printf("Failed to alloc for ecs->entity_indices.\n");
+            return INVALID_ENTITY;
+        }
+        ecs->entity_indices = temp_indices;
 
-        ecs->signatures[entity] = EMPTY_SIGNATURE; // Initialise new signature to empty.
-    
-        
-        // Grow sparse arrays for each ComponentList.
-        // TODO: If I stored a list of component lists in ECS this would just be a for loop maybe better.
-
-#define X(ComponentT, _) \
-{ \
-    int* temp_id_to_index = realloc(ecs->##ComponentT##s.id_to_index, total_created_entities * sizeof(int));           \
-    if (!temp_id_to_index)                                                                                    \
-    {                                                                                                         \
-        printf("failed to grow " #ComponentT "s\n");                                                          \
-        return INVALID_ENTITY;                                                                                \
-    }                                                                                                         \
-    ecs->##ComponentT##s.id_to_index = temp_id_to_index;                                                      \
-                                                                                                              \
-    EntityID* temp_index_to_id = realloc(ecs->##ComponentT##s.index_to_id, total_created_entities * sizeof(EntityID)); \
-    if (!temp_index_to_id)                                                                                    \
-    {                                                                                                         \
-        printf("failed to grow " #ComponentT "s\n");                                                          \
-        return INVALID_ENTITY;                                                                                \
-    }                                                                                                         \
-    ecs->##ComponentT##s.index_to_id = temp_index_to_id;                                                      \
-}
-        COMPONENTS_LIST
-#undef X
+        entity = total_created_entities - 1;   
     }
+    
+    // Initialise entity data.
+    ecs->entity_components_bitsets[entity] = COMPONENTS_EMPTY_BITSET;
+    ecs->entity_indices[entity] = -1;
+
     return entity;
 }
 
 // TODO: Rename destroy?
-void ECS_remove_entity(ECS* ecs, EntityID id)
+void ECS_destroy_entity(ECS* ecs, EntityID id)
 {
     --ecs->num_used_entities;
-
-    // TODO: test validity of id?
 
     // Entities don't need to be packed as we will never be iterating over the entities loop.
 
     // Clear entity signature.
-    const ComponentsSignature sig = ecs->signatures[id];
-    ecs->signatures[id] = EMPTY_SIGNATURE;
+    const ComponentsBitset old_bitset = ecs->entity_components_bitsets[id];
+    ecs->entity_components_bitsets[id] = COMPONENTS_EMPTY_BITSET;
 
     // Grow capacity if needed.
     if (ecs->free_entities_count == ecs->free_entities_capacity)
@@ -125,63 +110,300 @@ void ECS_remove_entity(ECS* ecs, EntityID id)
     ecs->free_entities[ecs->free_entities_count] = id;
     ++ecs->free_entities_count;
 
-    // Remove entity from all systems.
-    for (int i = 0; i < ecs->num_systems; ++i)
+    // Remove entity from it's archetype, which should remove it's components,
+    // note, sadly we have to search for the archetype. Could use a map from
+    // entity id to archetype id (index). TODO: consider.
+    for (int i = 0; i < ecs->num_archetypes; ++i)
     {
-        System* system = &ecs->systems[i];
-        if ((sig & system->signature) == system->signature)
+        Archetype* archetype = &ecs->archetypes[i];
+        if (archetype->signature.bitset == old_bitset)
         {
-            System_remove_entity(system, id);
-        }
-    }
-
-    // Try remove all components, if component doesn't exist for entity 
-    // it will just be ignored.
-#define X(ComponentT, _) ECS_remove_##ComponentT(ecs, id);
-    COMPONENTS_LIST
-#undef X
-
-}
-
-void ECS_on_add_component(ECS* ecs, EntityID id, ComponentsSignature component_signature)
-{
-    // To figure out if a system already has an entity, we're just relying on the fact
-    // that if we added a component to an entity, then it cannot be in a system with that
-    // component.
-
-    const ComponentsSignature entity_sig = ecs->signatures[id];
-
-    for (int i = 0; i < ecs->num_systems; ++i)
-    {
-        System* system = &ecs->systems[i];
-        const ComponentsSignature system_sig = system->signature;
-        if ((system_sig & component_signature) && ((entity_sig & system_sig) == system_sig))
-        {
-            System_add_entity(system, id);
+            Archetype_remove_entity(ecs, archetype, ecs->entity_indices[id]);
+            break;
         }
     }
 }
 
-void ECS_on_remove_component(ECS* ecs, EntityID id, ComponentsSignature component_signature)
+void ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
 {
-    // To figure out if we need to remove an entity from a system, we rely on the fact that if
-    // it has a component, it must be in a system that requires that component.
-    const ComponentsSignature entity_sig = ecs->signatures[id];
-    const ComponentsSignature previous_entity_sig = entity_sig | component_signature;
+    const ComponentsBitset old_components_bitset = ecs->entity_components_bitsets[eid];
+    const ComponentID component_bitset = COMPONENT_ID_TO_BITSET(cid);
 
-    for (int i = 0; i < ecs->num_systems; ++i)
+    // Entity already has component.
+    if (old_components_bitset & component_bitset)
     {
-        System* system = &ecs->systems[i];
-        const ComponentsSignature system_sig = system->signature;
+        return;
+    }
+ 
+    // Update entity's signature with the new component.
+    ecs->entity_components_bitsets[eid] |= component_bitset;
+
+    // TODO: If matching archetype doesn't exist, create one.
+    // TODO: With this, maybe we don't want an archetype for just one component?
+    //       Somehow we could delay archetype creation. (flag for it?)
+
+    // TODO: Is there a nicer way to do this using some sort of mapping, brute 
+    //       force search not ideal but shouldn't be a big issue for now.
+
+    // Must use ArchetypeID as if we create a new archetype we will invalidate the pointers.
+    ArchetypeID new_archetype_id = INVALID_ARCHETYPE;
+    ArchetypeID old_archetype_id = INVALID_ARCHETYPE;
+    for (int i = 0; i < ecs->num_archetypes; ++i)
+    {
+        if (ecs->archetypes[i].signature.bitset == old_components_bitset)
+        {
+            old_archetype_id = i;
+        }
+        if (ecs->archetypes[i].signature.bitset == ecs->entity_components_bitsets[eid])
+        {
+            new_archetype_id = i;
+        }
+    }
+
+    Archetype* new_archetype = 0;
+    
+    // Create new archetype to match entity signature.
+    if (new_archetype_id == INVALID_ARCHETYPE)
+    {
+        new_archetype = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
+    }
+    else
+    {
+        new_archetype = &ecs->archetypes[new_archetype_id];
+    }
+
+    Archetype* old_archetype = 0;
+
+    if (old_archetype_id != INVALID_ARCHETYPE)
+    {
+        old_archetype = &ecs->archetypes[old_archetype_id];
+    }
+
+    ECS_move_archetype(ecs, eid, old_archetype, new_archetype);
+
+    // TODO: Return void pointer to component?
+}
+
+// Internal helper functions
+Archetype* ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
+{
+    Archetype* temp = realloc(ecs->archetypes,
+        (size_t)(ecs->num_archetypes + 1) * sizeof(Archetype));
+
+    if (!temp)
+    {
+        // TODO: handle failure.
+        return 0;
+    }
+    ecs->archetypes = temp;
+
+    Archetype* archetype = &ecs->archetypes[ecs->num_archetypes];
+    ++ecs->num_archetypes;
+
+    Archetype_init(archetype);
+    archetype->signature.bitset = archetype_bitset;
+
+    // Create archetype signature from bitset.
+    for (int i = 0; i < COMPONENT_BITSET_SIZE; ++i)
+    {
+        ComponentsBitset bitset = COMPONENT_ID_TO_BITSET(i);
+
+        // Check if the archetype should have this component.
+        if (bitset & archetype_bitset)
+        {
+            ComponentInfo* temp = realloc(archetype->signature.infos,
+                (size_t)(archetype->signature.num_components + 1) * 
+                sizeof(ComponentInfo));
+
+            if (!temp)
+            {
+                // TODO: Handle failure.
+                return 0;
+            }
+            archetype->signature.infos = temp;
+
+            archetype->signature.infos[archetype->signature.num_components].id = i;
+            archetype->signature.infos[archetype->signature.num_components].size = ecs->component_infos[i].size;
+
+            ++archetype->signature.num_components;
+        }
+    }
+
+    // Allocate for component lists.
+    void** component_lists_temp = malloc(
+        archetype->signature.num_components * sizeof(void*));
+
+    if (!component_lists_temp)
+    {
+        // TODO: Handle failure.
+        return 0;
+    }
+
+    archetype->component_lists = component_lists_temp;
+
+    // Initialise component list pointers to nullptr, otherwise when we try to realloc
+    // they will have garbage values and fail.
+    for (int i = 0; i < archetype->signature.num_components; ++i)
+    {
+        archetype->component_lists[i] = 0;
+    }
+
+
+    //ComponentInfo* cinfos = malloc(archetype->signature.num_components * sizeof(ComponentInfo));
+    //archetype->
+
+
+
+    return archetype;
+}
+
+void ECS_move_archetype(ECS* ecs, EntityID id, Archetype* old_archetype,
+    Archetype* new_archetype)
+{
+    // Move an entity to a new archetype, copy data from old and remove if exists.
+    // The entity may not have an old archetype.
+    const int old_entity_index = ecs->entity_indices[id];
+
+    // Add the entity to the new archetype.
+    Archetype_add_entity(ecs, new_archetype, id);
+    ecs->entity_indices[id] = new_archetype->entity_count - 1;
+
+    // Copy old data if it exists.
+    if (old_archetype)
+    {
+        // We want to find the matching components in the old and new archetypes,
+        // copy from old to new if they match. Sadly we need an O(N^2) loop to
+        // find the index of the components in the old archetype.
         
-        // 1) We only care about system's that require the component we just removed.
-        // 2) The old signature must match the system's (otherwise the entity isn't in the system).
-        // 3) The new signature must not match the system's (a required component was removed).
-        if ((system_sig & component_signature) && 
-            ((previous_entity_sig & system_sig) == system_sig) && 
-            ((entity_sig & system_sig) != system_sig))
+        // For each component in the new archetype, search the old archetype for a matching one.
+        for (int i = 0; i < new_archetype->signature.num_components; ++i)
         {
-            System_remove_entity(system, id);
+            ComponentID cid_new = new_archetype->signature.infos[i].id;
+
+            int old_component_list_i = -1;
+            for (int j = 0; j < old_archetype->signature.num_components; ++j)
+            {
+                ComponentID cid_old = old_archetype->signature.infos[j].id;
+                if (cid_new == cid_old) 
+                {
+                    old_component_list_i = j;
+                    break;
+                }
+            }
+            
+            // Not found, so nothing to copy from old to new.
+            if (old_component_list_i == -1) continue;
+
+            const ComponentInfo info = ecs->component_infos[cid_new];
+
+            // Convert void* to byte array so we can do pointer arithmetic.
+
+            const void* vsrc = old_archetype->component_lists[old_component_list_i];
+            void* vdest = new_archetype->component_lists[i];
+
+            const uint8_t* src = (uint8_t*)(vsrc);
+            uint8_t* dest = (uint8_t*)(vdest);
+
+            const uint32_t src_offset = (uint32_t)(old_entity_index) * info.size;
+            const uint32_t dest_offset = (uint32_t)(new_archetype->entity_count - 1) * info.size;
+
+            // Copy the old data to the new archetype.
+            memcpy(dest + dest_offset, src + src_offset, info.size);
+            
+
+            // Get location of entity in old archetype.
+
+
         }
+
+        // Remove old data from archetype.
+        Archetype_remove_entity(ecs, old_archetype, old_entity_index);
     }
 }
+
+inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype, EntityID eid)
+{
+    // Create space for the new entity, or reuse spare capacity
+    if (archetype->entity_count == archetype->entity_capacity)
+    {
+        // Grow each component list.
+        for (int i = 0; i < archetype->signature.num_components; ++i)
+        {
+            ComponentInfo info = archetype->signature.infos[i];
+
+            void* temp = realloc(archetype->component_lists[i],
+                (size_t)(archetype->entity_count + 1) * info.size);
+
+            if (!temp)
+            {
+                // TODO: handle failure
+                return;
+            }
+
+            archetype->component_lists[i] = temp;
+            
+        }
+
+        // Grow index to entity map.
+        int* temp = realloc(archetype->index_to_entity, 
+            (size_t)(archetype->entity_count + 1) * sizeof(int));
+
+        if (!temp)
+        {
+            // TODO: Handle failure.
+            return;
+        }
+
+        archetype->index_to_entity = temp;
+    }
+
+    // TODO: clear/initialise data??
+    archetype->index_to_entity[archetype->entity_count] = eid;
+     
+    ++archetype->entity_count;
+}
+
+inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype, 
+    int entity_index)
+{
+    // TODO: What if entity count is 0?
+
+    // Handle easy case of only one entity.
+    if (archetype->entity_count == 1)
+    {
+        --archetype->entity_count;
+        return;
+    }
+
+
+
+    // TODO: how do we update the old entitiy, need an index to id..... but in
+    //       archetype damn it.
+    int last_entity_index = archetype->entity_count - 1;
+
+    for (int i = 0; i < archetype->signature.num_components; ++i)
+    {
+        const uint32_t component_size = archetype->signature.infos[i].size;
+        
+        const uint32_t component_to_remove = entity_index * component_size * i;
+        const uint32_t component_to_copy = last_entity_index * component_size * i;
+
+        uint8_t* component_list = (uint8_t*)(archetype->component_lists[i]);
+
+        // Copy the last component over the component we're removing.
+        memcpy(component_list + component_to_remove,
+            component_list + component_to_copy,
+            component_size);
+    }
+
+    // Update the entity we've moved's index.
+    const EntityID entity_to_remove = archetype->index_to_entity[last_entity_index];
+    archetype->index_to_entity[entity_index] = entity_to_remove;
+
+    // Update the entity's index in the ecs.
+    ecs->entity_indices[entity_to_remove] = entity_index;
+
+    // 'Remove' the last entity.
+    --archetype->entity_count;
+}
+

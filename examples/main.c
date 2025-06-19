@@ -35,107 +35,55 @@ TODO:
 */
 
 
-
-
-// TODO: System should be a part of ECS?
-void test_system_update(ECS* ecs, System* system)
+void log_archetypes(ECS* ecs)
 {
-    // TODO: I've realised this pretty much entirely defeats the point of the ECS.
-    //       we're no longer itertating through tightly packed component lists.
-    /*
-    
-    basically desired code:
-
-    for i in num_entities_with_archetype
-        render(transforms[i], mesh_instances[i])
-
-
-    */
-
-    for (int i = 0; i < system->num_entities; ++i)
+    for (int i = 0; i < ecs->num_archetypes; ++i)
     {
-        const EntityID e = system->entities[i];
+        const Archetype* archetype = &ecs->archetypes[i];
+        printf("Archetype\n");
+        printf("bitset: %d\n" , archetype->signature.bitset);
+        printf("num_components %d\n", archetype->signature.num_components);
+        printf("num_entites %d\n", archetype->entity_count);
 
-        Position* pos = ECS_get_Position(ecs, e);
-        const Tag* tag = ECS_get_Tag(ecs, e);
-
-        printf("%f %f %f\n", pos->x, pos->y, pos->z);
-        printf("%s\n", tag->tag);
-
-        pos->x += 1.f;
+        printf("\n");
     }
-    printf("\n");
+    printf("-----------\n\n");
 }
 
-// TODO: Write some tests for this and restrucutre everything.
+
+typedef struct
+{
+    float x, y, z;
+} Position;
+
+typedef struct
+{
+    float vx, vy, vz;
+} Velocity;
 
 int main()
 {
     ECS ecs;
     ECS_init(&ecs);
 
-    // TODO: This pointer obviously going invalid, is there a way to do this at compile time? IDK.
-    // TODO: Or we just return an index 'SystemID'.
-    SystemID test_system_id = ECS_add_System(&ecs);
-    ecs.systems[test_system_id].signature = COMPONENT_SIGNATURE_Position | COMPONENT_SIGNATURE_Tag;
+    ComponentID position_component = ECS_register_component(&ecs, sizeof(Position));
+    ComponentID velocity_component = ECS_register_component(&ecs, sizeof(Velocity));
 
     EntityID e0 = ECS_create_entity(&ecs);
+
+    ECS_add_component(&ecs, e0, position_component);
+
+    log_archetypes(&ecs);
+
+    ECS_add_component(&ecs, e0, velocity_component);
+
+    log_archetypes(&ecs);
+
     EntityID e1 = ECS_create_entity(&ecs);
+    ECS_add_component(&ecs, e1, velocity_component);
 
-    Position* pos = ECS_add_Position(&ecs, e0);
-
-    pos->x = 5.f;
-    pos->y = 5.f;
-    pos->z = 5.f;
-    
-    Tag* tag = ECS_add_Tag(&ecs, e0);
-    strcpy_s(tag->tag, MAX_TAG, "abc");
-
-    printf("%d\n", e0);
-    printf("%d\n", e1);
-
-    printf("%d\n", ecs.signatures[e0]);
-    printf("%d\n", ecs.signatures[e1]);
-   
-    int n = 0;
-
-    // All systems added so pointers valid.
-    System* test_system = &ecs.systems[test_system_id];
-
-    while (1)
-    {
-        if (n == 5)
-        {
-            Position* p = ECS_add_Position(&ecs, e1);
-            p->x = -10;
-            p->y = -10;
-            p->z = -10;
-            strcpy_s(ECS_add_Tag(&ecs, e1)->tag, MAX_TAG, "WHAT THE SIGMA!");
-        }
-        if (n == 10)
-        {
-            ECS_remove_Position(&ecs, e1);
-        }
-        if (n == 15)
-        {
-            ECS_remove_entity(&ecs, e0);
-        }
-        if (n == 20)
-        {
-            e0 = ECS_create_entity(&ecs);
-            Position* p = ECS_add_Position(&ecs, e0);
-            p->x = 0;
-            p->y = 0;
-            p->z = 0;
-            strcpy_s(ECS_add_Tag(&ecs, e0)->tag, MAX_TAG, "NEW!");
-        }
-       
-        test_system_update(&ecs, test_system);
-        
-        Sleep(1000);
-
-        ++n;
-    }
+    // TODO: Some debug stuff.
+    log_archetypes(&ecs);
 
 	return 0;
 }

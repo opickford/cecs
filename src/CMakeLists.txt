@@ -1,5 +1,5 @@
 ﻿add_library (cecs STATIC 
-	"ecs.c" "system.c"
+	"ecs.c" 
 )
 
 # Make users include with lib name prefix to avoid potential clashes.
