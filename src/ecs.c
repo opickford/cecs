@@ -193,6 +193,51 @@ void ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
     // TODO: Return void pointer to component?
 }
 
+void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
+{
+    const ComponentsBitset old_components_bitset = ecs->entity_components_bitsets[eid];
+    const ComponentID component_bitset = COMPONENT_ID_TO_BITSET(cid);
+
+    // Entity already has component.
+    if (old_components_bitset & component_bitset)
+    {
+        return;
+    }
+
+    // Remove component from entity's bitset.
+    ecs->entity_components_bitsets[eid] &= (~component_bitset);
+
+    // TODO: If matching archetype doesn't exist, create one.
+    // TODO: With this, maybe we don't want an archetype for just one component?
+    //       Somehow we could delay archetype creation. (flag for it?)
+
+    // TODO: Is there a nicer way to do this using some sort of mapping, brute 
+    //       force search not ideal but shouldn't be a big issue for now.
+
+    // Must use ArchetypeID as if we create a new archetype we will invalidate the pointers.
+    ArchetypeID new_archetype_id = INVALID_ARCHETYPE;
+    ArchetypeID old_archetype_id = INVALID_ARCHETYPE;
+    for (int i = 0; i < ecs->num_archetypes; ++i)
+    {
+        if (ecs->archetypes[i].signature.bitset == old_components_bitset)
+        {
+            old_archetype_id = i;
+        }
+        if (ecs->archetypes[i].signature.bitset == ecs->entity_components_bitsets[eid])
+        {
+            new_archetype_id = i;
+        }
+    }
+
+    // Create new archetype to match entity signature.
+    if (new_archetype_id == INVALID_ARCHETYPE)
+    {
+        new_archetype_id = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
+    }
+
+    ECS_move_archetype(ecs, eid, old_archetype_id, new_archetype_id);
+}
+
 void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid)
 {
     EntityIndex ei = ecs->entity_indices[eid];

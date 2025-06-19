@@ -122,32 +122,26 @@ int main()
 
     int num_entities = 100000;
 
-    for (int i = 0; i < num_entities; ++i)
-    {
-        if (i % 1000 == 0) printf("%d\n",i);
-        EntityID e0 = ECS_create_entity(&ecs);
+    
+    EntityID e0 = ECS_create_entity(&ecs);
 
-        // TODO: Could return void* for component?
-        ECS_add_component(&ecs, e0, position_component);
+    // TODO: Could return void* for component?
+    ECS_add_component(&ecs, e0, position_component);
 
-        Position* e0_pos = ECS_get_component(&ecs, e0, position_component);
-        e0_pos->x = i;
-        e0_pos->y = i;
-        e0_pos->z = i;
+    Position* e0_pos = ECS_get_component(&ecs, e0, position_component);
+    e0_pos->x = 1;
+    e0_pos->y = 1;
+    e0_pos->z = 1;
 
-        ECS_add_component(&ecs, e0, velocity_component);
+    ECS_add_component(&ecs, e0, velocity_component);
 
-        Velocity* e0_vel = ECS_get_component(&ecs, e0, velocity_component);
-        e0_vel->vx = -i;
-        e0_vel->vy = -i;
-        e0_vel->vz = -i;
-
-    }
-
-
+    Velocity* e0_vel = ECS_get_component(&ecs, e0, velocity_component);
+    e0_vel->vx = -1;
+    e0_vel->vy = -1;
+    e0_vel->vz = -1;
 
     
-
+    ECS_remove_component(&ecs, e0, velocity_component);
     
 
 
@@ -155,6 +149,9 @@ int main()
     ECS_add_component(&ecs, e1, velocity_component);
     ECS_add_component(&ecs, e1, position_component);
     ECS_add_component(&ecs, e1, health_component);
+
+    ECS_destroy_entity(&ecs, e1);
+    
 
     // TODO: Make a func pointer in the system and let ecs tick.
     test_system_func(&ecs, test_system);
