@@ -71,6 +71,7 @@ EntityID ECS_create_entity(ECS* ecs)
         const int total_created_entities = ecs->num_used_entities + ecs->free_entities_count;
 
         // TODO: Grow by some factor to save allocations?
+        // TODO: Really need to do this!
         ComponentsBitset* temp_bitsets = realloc(ecs->entity_components_bitsets,
             total_created_entities * sizeof(ComponentsBitset));
 
@@ -382,7 +383,13 @@ inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
     // Create space for the new entity, or reuse spare capacity
     if (archetype->entity_count == archetype->entity_capacity)
     {
-        ++archetype->entity_capacity;
+        // TODO: Grow by factor.
+        const float GROWTH_FACTOR = 0.25f;
+
+        int extra = archetype->entity_capacity * GROWTH_FACTOR;
+        if (extra == 0) extra = 1;
+
+        archetype->entity_capacity += extra;
 
         // Grow each component list.
         for (int i = 0; i < archetype->signature.num_components; ++i)
@@ -390,7 +397,7 @@ inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
             ComponentInfo info = archetype->signature.infos[i];
 
             void* temp = realloc(archetype->component_lists[i],
-                (size_t)(archetype->entity_count + 1) * info.size);
+                (size_t)(archetype->entity_capacity) * info.size);
 
             if (!temp)
             {
@@ -404,7 +411,7 @@ inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
 
         // Grow index to entity map.
         int* temp = realloc(archetype->index_to_entity, 
-            (size_t)(archetype->entity_count + 1) * sizeof(int));
+            (size_t)(archetype->entity_capacity) * sizeof(int));
 
         if (!temp)
         {

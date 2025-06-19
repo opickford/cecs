@@ -100,8 +100,6 @@ void log_archetypes(ECS* ecs)
 }
 
 
-
-
 int main()
 {
     ECS ecs;
@@ -121,32 +119,42 @@ int main()
         COMPONENT_ID_TO_BITSET(position_component) | 
         COMPONENT_ID_TO_BITSET(velocity_component);
 
-    EntityID e0 = ECS_create_entity(&ecs);
 
-    // TODO: Could return void* for component?
-    ECS_add_component(&ecs, e0, position_component);
+    int num_entities = 100000;
 
-    // TODO: How do we get a component.
+    for (int i = 0; i < num_entities; ++i)
+    {
+        if (i % 1000 == 0) printf("%d\n",i);
+        EntityID e0 = ECS_create_entity(&ecs);
+
+        // TODO: Could return void* for component?
+        ECS_add_component(&ecs, e0, position_component);
+
+        Position* e0_pos = ECS_get_component(&ecs, e0, position_component);
+        e0_pos->x = i;
+        e0_pos->y = i;
+        e0_pos->z = i;
+
+        ECS_add_component(&ecs, e0, velocity_component);
+
+        Velocity* e0_vel = ECS_get_component(&ecs, e0, velocity_component);
+        e0_vel->vx = -i;
+        e0_vel->vy = -i;
+        e0_vel->vz = -i;
+
+    }
+
+
+
     
 
-    ECS_add_component(&ecs, e0, velocity_component);
-
-
-    Position* e0_pos = ECS_get_component(&ecs, e0, position_component);
-    e0_pos->x = 5;
-    e0_pos->y = 6;
-    e0_pos->z = 7;
-
-    Velocity* e0_vel = ECS_get_component(&ecs, e0, velocity_component);
-    e0_vel->vx = -5;
-    e0_vel->vy = -6;
-    e0_vel->vz = -7;
+    
 
 
     EntityID e1 = ECS_create_entity(&ecs);
     ECS_add_component(&ecs, e1, velocity_component);
     ECS_add_component(&ecs, e1, position_component);
-    //ECS_add_component(&ecs, e1, health_component);
+    ECS_add_component(&ecs, e1, health_component);
 
     // TODO: Make a func pointer in the system and let ecs tick.
     test_system_func(&ecs, test_system);
