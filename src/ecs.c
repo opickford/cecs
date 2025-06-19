@@ -32,6 +32,26 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
     return cid;
 }
 
+SystemID ECS_register_system(ECS* ecs)
+{
+    System* temp_systems = realloc(ecs->systems, ecs->num_systems + 1 * sizeof(System));
+    if (!temp_systems)
+    {
+        // TODO: Handle failure
+        return -1;
+    }
+    ecs->systems = temp_systems;
+
+    // Initialise the new system
+    SystemID system_id = ecs->num_systems;
+    System* system = &ecs->systems[system_id];
+    System_init(system);
+
+    ++ecs->num_systems;
+
+    return system_id;
+}
+
 EntityID ECS_create_entity(ECS* ecs)
 {
     EntityID entity;
@@ -61,8 +81,8 @@ EntityID ECS_create_entity(ECS* ecs)
         }
         ecs->entity_components_bitsets = temp_bitsets;
 
-        int* temp_indices = realloc(ecs->entity_indices, 
-            total_created_entities * sizeof(int));
+        EntityIndex* temp_indices = realloc(ecs->entity_indices, 
+            total_created_entities * sizeof(EntityIndex));
         if (!temp_indices)
         {
             printf("Failed to alloc for ecs->entity_indices.\n");
@@ -75,7 +95,8 @@ EntityID ECS_create_entity(ECS* ecs)
     
     // Initialise entity data.
     ecs->entity_components_bitsets[entity] = COMPONENTS_EMPTY_BITSET;
-    ecs->entity_indices[entity] = -1;
+    ecs->entity_indices[entity].archetype_id = -1;
+    ecs->entity_indices[entity].component_list_index = -1;
 
     return entity;
 }
@@ -118,7 +139,7 @@ void ECS_destroy_entity(ECS* ecs, EntityID id)
         Archetype* archetype = &ecs->archetypes[i];
         if (archetype->signature.bitset == old_bitset)
         {
-            Archetype_remove_entity(ecs, archetype, ecs->entity_indices[id]);
+            Archetype_remove_entity(ecs, archetype, ecs->entity_indices[id].component_list_index);
             break;
         }
     }
@@ -160,32 +181,43 @@ void ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
         }
     }
 
-    Archetype* new_archetype = 0;
-    
     // Create new archetype to match entity signature.
     if (new_archetype_id == INVALID_ARCHETYPE)
     {
-        new_archetype = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
-    }
-    else
-    {
-        new_archetype = &ecs->archetypes[new_archetype_id];
+        new_archetype_id = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
     }
 
-    Archetype* old_archetype = 0;
-
-    if (old_archetype_id != INVALID_ARCHETYPE)
-    {
-        old_archetype = &ecs->archetypes[old_archetype_id];
-    }
-
-    ECS_move_archetype(ecs, eid, old_archetype, new_archetype);
+    ECS_move_archetype(ecs, eid, old_archetype_id, new_archetype_id);
 
     // TODO: Return void pointer to component?
 }
 
+void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid)
+{
+    EntityIndex ei = ecs->entity_indices[eid];
+    Archetype* archetype = &ecs->archetypes[ei.archetype_id];
+    
+    int size = ecs->component_infos[cid].size;
+
+    int i = Archetype_find_component_list(archetype, cid);
+    if (i == -1)
+    {
+        // TODO: Handle failure
+        return 0;
+    }
+
+    //ComponentInfo cinfo = ecs->component_infos[cid];
+
+    // Convert to uint8_t for pointer arithmetic.
+    uint8_t* component_list = archetype->component_lists[i];
+    
+    void* component = component_list + ei.component_list_index * size;
+    return component;
+}
+
+
 // Internal helper functions
-Archetype* ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
+ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
 {
     Archetype* temp = realloc(ecs->archetypes,
         (size_t)(ecs->num_archetypes + 1) * sizeof(Archetype));
@@ -197,7 +229,8 @@ Archetype* ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
     }
     ecs->archetypes = temp;
 
-    Archetype* archetype = &ecs->archetypes[ecs->num_archetypes];
+    ArchetypeID archetype_id = ecs->num_archetypes;
+    Archetype* archetype = &ecs->archetypes[archetype_id];
     ++ecs->num_archetypes;
 
     Archetype_init(archetype);
@@ -248,25 +281,46 @@ Archetype* ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
         archetype->component_lists[i] = 0;
     }
 
+    // Add the archetype to all systems that fit it's signature.
+    for (int i = 0; i < ecs->num_systems; ++i)
+    {
+        System* system = &ecs->systems[i];
+        if ((archetype_bitset & system->components_bitset) == system->components_bitset)
+        {
+            System_add_archetype(system, archetype_id);
+        }
+    }
 
-    //ComponentInfo* cinfos = malloc(archetype->signature.num_components * sizeof(ComponentInfo));
-    //archetype->
-
-
-
-    return archetype;
+    return archetype_id;
 }
 
-void ECS_move_archetype(ECS* ecs, EntityID id, Archetype* old_archetype,
-    Archetype* new_archetype)
+void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
+    ArchetypeID new_archetype_id)
 {
+    if (new_archetype_id == INVALID_ARCHETYPE)
+    {
+        // TODO: Handle error.
+        return;
+    }
+    Archetype* new_archetype = &ecs->archetypes[new_archetype_id];
+
+    Archetype* old_archetype = 0;
+
+    if (old_archetype_id != INVALID_ARCHETYPE)
+    {
+        old_archetype = &ecs->archetypes[old_archetype_id];
+    }
+
     // Move an entity to a new archetype, copy data from old and remove if exists.
     // The entity may not have an old archetype.
-    const int old_entity_index = ecs->entity_indices[id];
+    const EntityIndex old_entity_index = ecs->entity_indices[id];
 
     // Add the entity to the new archetype.
     Archetype_add_entity(ecs, new_archetype, id);
-    ecs->entity_indices[id] = new_archetype->entity_count - 1;
+
+    // Update information on where the entity is.
+    ecs->entity_indices[id].archetype_id = new_archetype_id;
+    ecs->entity_indices[id].component_list_index = new_archetype->entity_count - 1;
 
     // Copy old data if it exists.
     if (old_archetype)
@@ -304,7 +358,7 @@ void ECS_move_archetype(ECS* ecs, EntityID id, Archetype* old_archetype,
             const uint8_t* src = (uint8_t*)(vsrc);
             uint8_t* dest = (uint8_t*)(vdest);
 
-            const uint32_t src_offset = (uint32_t)(old_entity_index) * info.size;
+            const uint32_t src_offset = (uint32_t)(old_entity_index.component_list_index) * info.size;
             const uint32_t dest_offset = (uint32_t)(new_archetype->entity_count - 1) * info.size;
 
             // Copy the old data to the new archetype.
@@ -312,12 +366,13 @@ void ECS_move_archetype(ECS* ecs, EntityID id, Archetype* old_archetype,
             
 
             // Get location of entity in old archetype.
+            // TODO: WHAT? WHY?
 
 
         }
 
         // Remove old data from archetype.
-        Archetype_remove_entity(ecs, old_archetype, old_entity_index);
+        Archetype_remove_entity(ecs, old_archetype, old_entity_index.component_list_index);
     }
 }
 
@@ -401,7 +456,7 @@ inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype,
     archetype->index_to_entity[entity_index] = entity_to_remove;
 
     // Update the entity's index in the ecs.
-    ecs->entity_indices[entity_to_remove] = entity_index;
+    ecs->entity_indices[entity_to_remove].component_list_index = entity_index;
 
     // 'Remove' the last entity.
     --archetype->entity_count;

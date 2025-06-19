@@ -41,6 +41,23 @@ inline void Archetype_destroy(Archetype* archetype)
     archetype = 0;
 }
 
+// TODO: Currently a linear search, not ideal. Low number of components should be 
+//       fine but really want to improve this.
+inline int Archetype_find_component_list(Archetype* archetype, ComponentID cid)
+{
+    const ComponentsSignature* signature = &archetype->signature;
+    for (int i = 0; i < signature->num_components; ++i)
+    {
+        if (signature->infos[i].id == cid)
+        {
+            return i;
+        }
+    }
+
+    // TODO: How else.
+    return -1;
+}
+
 
 
 

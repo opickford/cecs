@@ -3,6 +3,8 @@
 #include <string.h>
 #include <Windows.h> // Sleep
 
+#include <stdio.h>
+
 
 // TODO: Get a better example working, how can we define components.. - this cannot be done at compile time i believe.
 
@@ -34,6 +36,46 @@ TODO:
 
 */
 
+// TODO: How do we fix this.
+ComponentID position_component;
+ComponentID velocity_component;
+
+typedef struct
+{
+    float x, y, z;
+} Position;
+
+typedef struct
+{
+    float vx, vy, vz;
+} Velocity;
+
+void test_system_func(ECS* ecs, System* system)
+{
+    for (int si = 0; si < system->num_archetypes; ++si)
+    {
+        ArchetypeID archetype_id = system->archetype_ids[si];
+        Archetype* archetype = &ecs->archetypes[archetype_id];
+
+        int positions_i = Archetype_find_component_list(archetype, position_component);
+        Position* positions = archetype->component_lists[positions_i];
+
+        int velocities_i = Archetype_find_component_list(archetype, velocity_component);
+        Velocity* velocities = archetype->component_lists[velocities_i];
+
+        for (int i = 0; i < archetype->entity_count; ++i)
+        {
+            Position p = positions[i];
+            Velocity v = velocities[i];
+
+            printf("Position: %f %f %f\n", p.x, p.y, p.z);
+            printf("Velocity: %f %f %f\n", v.vx, v.vy, v.vz);
+        }
+
+        printf("End of archetype\n");
+    }
+}
+
 
 void log_archetypes(ECS* ecs)
 {
@@ -51,39 +93,53 @@ void log_archetypes(ECS* ecs)
 }
 
 
-typedef struct
-{
-    float x, y, z;
-} Position;
 
-typedef struct
-{
-    float vx, vy, vz;
-} Velocity;
 
 int main()
 {
     ECS ecs;
     ECS_init(&ecs);
 
-    ComponentID position_component = ECS_register_component(&ecs, sizeof(Position));
-    ComponentID velocity_component = ECS_register_component(&ecs, sizeof(Velocity));
+    position_component = ECS_register_component(&ecs, sizeof(Position));
+    velocity_component = ECS_register_component(&ecs, sizeof(Velocity));
+
+    // Register a test system that uses both components.
+    // TODO: Make nicer somehow idk?
+    SystemID test_system_id = ECS_register_system(&ecs);
+    System* test_system = &ecs.systems[test_system_id];
+
+    // TODO: Define for this?
+    test_system->components_bitset =
+        COMPONENT_ID_TO_BITSET(position_component) | 
+        COMPONENT_ID_TO_BITSET(velocity_component);
 
     EntityID e0 = ECS_create_entity(&ecs);
 
+    // TODO: Could return void* for component?
     ECS_add_component(&ecs, e0, position_component);
 
-    log_archetypes(&ecs);
+    // TODO: How do we get a component.
+    
 
     ECS_add_component(&ecs, e0, velocity_component);
 
-    log_archetypes(&ecs);
+
+    Position* e0_pos = ECS_get_component(&ecs, e0, position_component);
+    e0_pos->x = 5;
+    e0_pos->y = 6;
+    e0_pos->z = 7;
+
+    Velocity* e0_vel = ECS_get_component(&ecs, e0, velocity_component);
+    e0_vel->vx = -5;
+    e0_vel->vy = -6;
+    e0_vel->vz = -7;
+
 
     EntityID e1 = ECS_create_entity(&ecs);
     ECS_add_component(&ecs, e1, velocity_component);
 
-    // TODO: Some debug stuff.
-    log_archetypes(&ecs);
+    // TODO: Make a func pointer in the system and let ecs tick.
+    test_system_func(&ecs, test_system);
 
 	return 0;
 }

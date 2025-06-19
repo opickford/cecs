@@ -1,6 +1,27 @@
 #ifndef COMPONENT_H
 #define COMPONENT_H
 
+#include <stdint.h>
+
+/*
+
+TODO: Probably gotta rethink all of this at some point.
+
+ComponentID
+- The ECS stores an array of components, hence, ComponentID is an index into that array.
+- TODO: Static sized array of components in ecs?
+
+ComponentBitset:
+- Represents flags for present components, this is for quicker comparisons.
+
+ComponentInfo: 
+- Stores the sizeof(ComponentT) and it's ID (index in ecs components array).
+
+ComponentsSignature:
+- Stores a bitset and array of component infos.
+
+*/
+
 // Represents a bitset of components.
 typedef uint16_t ComponentsBitset; // TODO: Just signature?
 typedef uint8_t ComponentID;
