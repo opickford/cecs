@@ -150,6 +150,10 @@ int main()
     ECS_add_component(&ecs, e1, position_component);
     ECS_add_component(&ecs, e1, health_component);
 
+    ECS_remove_component(&ecs, e1, health_component);
+    ECS_remove_component(&ecs, e1, velocity_component);
+    ECS_remove_component(&ecs, e1, position_component);
+
     ECS_destroy_entity(&ecs, e1);
     
 

@@ -198,8 +198,8 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
     const ComponentsBitset old_components_bitset = ecs->entity_components_bitsets[eid];
     const ComponentID component_bitset = COMPONENT_ID_TO_BITSET(cid);
 
-    // Entity already has component.
-    if (old_components_bitset & component_bitset)
+    // Entity doesn't have the component.
+    if (!(old_components_bitset & component_bitset))
     {
         return;
     }
