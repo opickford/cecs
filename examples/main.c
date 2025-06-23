@@ -36,6 +36,11 @@ TODO:
 
 */
 
+
+
+// TODO: Refactor projects here like the range one, much nicer there!!!!
+
+
 // TODO: How do we fix this.
 ComponentID position_component;
 ComponentID velocity_component;

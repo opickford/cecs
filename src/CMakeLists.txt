@@ -2,11 +2,18 @@
 	"ecs.c" 
 )
 
-# Make users include with lib name prefix to avoid potential clashes.
-cmake_path(SET publicIncludeDir NORMALIZE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
-cmake_path(SET privateIncludeDir NORMALIZE ${CMAKE_CURRENT_SOURCE_DIR}/../include/cecs)
+add_library(cecs::cecs ALIAS cecs)
 
 target_include_directories(cecs 
-	PUBLIC ${publicIncludeDir}
-	PRIVATE ${privateIncludeDir}
+	PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+		$<INSTALL_INTERFACE:include>
+
+	PRIVATE
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include/cecs>
+)
+
+# TODO: Do we need.
+set_target_properties(cecs PROPERTIES
+    DEBUG_POSTFIX d
 )
