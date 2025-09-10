@@ -34,7 +34,7 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
 
 SystemID ECS_register_system(ECS* ecs)
 {
-    System* temp_systems = realloc(ecs->systems, ecs->num_systems + 1 * sizeof(System));
+    System* temp_systems = realloc(ecs->systems, (size_t)(ecs->num_systems + 1) * sizeof(System));
     if (!temp_systems)
     {
         // TODO: Handle failure
