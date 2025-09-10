@@ -1,5 +1,12 @@
 ﻿add_library (cecs STATIC 
 	"ecs.c" 
+
+	# Headers for Visual Studio
+	"../include/cecs/archetype.h"
+	"../include/cecs/component.h"
+	"../include/cecs/ecs.h"
+	"../include/cecs/entity.h"
+	"../include/cecs/system.h"
 )
 
 add_library(cecs::cecs ALIAS cecs)
