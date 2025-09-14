@@ -195,12 +195,6 @@ void ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
 
 void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
 {
-    // To remove a component, we must move the entity from its current
-    // archetype to its new one. 
-    // TODO: What happens to the old component? 
-
-
-
     const ComponentsBitset old_components_bitset = ecs->entity_components_bitsets[eid];
     const ComponentID component_bitset = COMPONENT_ID_TO_BITSET(cid);
 
@@ -213,11 +207,7 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
     // Remove component from entity's bitset.
     ecs->entity_components_bitsets[eid] &= (~component_bitset);
 
-    // TODO: We need to actually delete the component...............
-    //       Or should this be done by the user? that is also fine...
-
-
-
+    // TODO: If matching archetype doesn't exist, create one.
     // TODO: With this, maybe we don't want an archetype for just one component?
     //       Somehow we could delay archetype creation. (flag for it?)
 
@@ -239,9 +229,7 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
         }
     }
 
-    // Create new archetype to match entity signature - I believe this currently will only
-    // happen if we are removing the last component an entity has, as this will create an
-    // empty archetype?
+    // Create new archetype to match entity signature.
     if (new_archetype_id == INVALID_ARCHETYPE)
     {
         new_archetype_id = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
@@ -497,18 +485,18 @@ inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype,
         return;
     }
 
+
+
     // TODO: how do we update the old entitiy, need an index to id..... but in
     //       archetype damn it.
     int last_entity_index = archetype->entity_count - 1;
 
-    // Copy the components from the last entity in the archetype over the top
-    // of the one we're removing.
     for (int i = 0; i < archetype->signature.num_components; ++i)
     {
         const uint32_t component_size = archetype->signature.infos[i].size;
         
-        const uint32_t component_to_remove = entity_index * component_size;
-        const uint32_t component_to_copy = last_entity_index * component_size;
+        const uint32_t component_to_remove = entity_index * component_size * i;
+        const uint32_t component_to_copy = last_entity_index * component_size * i;
 
         uint8_t* component_list = (uint8_t*)(archetype->component_lists[i]);
 
