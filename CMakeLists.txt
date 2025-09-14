@@ -7,6 +7,7 @@ option(CECS_BUILD_EXAMPLES "Build examples" ON)
 option(CECS_INSTALL "Enable installation" ON)
 
 # Set output directories for all targets, makes it a bit neater.
+# TODO: DO we need these?
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -26,3 +27,5 @@ endif()
 if(CECS_INSTALL)
     include(cmake/install.cmake)
 endif()
+
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "example")
