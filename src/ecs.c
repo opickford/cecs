@@ -372,11 +372,16 @@ void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
     Archetype* new_archetype = &ecs->archetypes[new_archetype_id];
     Archetype_add_entity(ecs, new_archetype, id);
 
+    // Copy where the entity used to live.
+    const EntityIndex old_entity_index = ecs->entity_indices[id];
+
     // Update information on where the entity is.
     ecs->entity_indices[id].archetype_id = new_archetype_id;
     ecs->entity_indices[id].component_list_index = new_archetype->entity_count - 1;
 
     // Check for an old archetype.
+    // NOTE: There should always be an old archetype except if the entity has just been
+    //       created and is being moved to the empty archetype!
     Archetype* old_archetype = 0;
     if (old_archetype_id != INVALID_ARCHETYPE)
     {
@@ -384,11 +389,13 @@ void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
     }
     if (!old_archetype)
     {
+        assert(new_archetype_id == EMPTY_ARCHETYPE_ID);
+        if (new_archetype_id == EMPTY_ARCHETYPE_ID)
+        {
+            // TODO: Handle error!!!
+        }
         return;
     }
-
-    // Copy data from old archetype to new and remove from old if exists.
-    const EntityIndex old_entity_index = ecs->entity_indices[id];
 
     // We want to find the matching components in the old and new archetypes,
     // copy from old to new if they match. Sadly we need an O(N^2) loop to
@@ -440,6 +447,11 @@ void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
 inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype, 
     EntityID eid)
 {
+    // TODO: I fear we have some logic error here.
+    //       If we remove an entity from the archetype, now we don't need
+    //       to realloc for the entity as there is spare capacity, however,
+    //       now there is 
+
     // Create space for the new entity, or reuse spare capacity
     if (archetype->entity_count == archetype->entity_capacity)
     {
@@ -499,8 +511,11 @@ inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype,
         return;
     }
 
-    // Handle easy case of only one entity.
-    if (archetype->entity_count == 1)
+
+    int last_entity_index = archetype->entity_count - 1;
+
+    // Handle easy case of the entity being the last in the archetype.
+    if (entity_index == last_entity_index)
     {
         --archetype->entity_count;
         return;
@@ -508,7 +523,6 @@ inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype,
 
     // TODO: how do we update the old entitiy, need an index to id..... but in
     //       archetype damn it.
-    int last_entity_index = archetype->entity_count - 1;
 
     // Copy the components from the last entity in the archetype over the top
     // of the one we're removing.
