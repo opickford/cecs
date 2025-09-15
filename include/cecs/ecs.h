@@ -6,6 +6,9 @@
 #include "entity.h"
 #include "system.h"
 
+// The empty archetype must be the first created.
+#define EMPTY_ARCHETYPE_ID 0
+
 // TODO: Just redo everything really.
 
 typedef struct

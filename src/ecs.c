@@ -3,10 +3,25 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 void ECS_init(ECS* ecs)
 {
     memset(ecs, 0, sizeof(ECS));
+
+    // Ensure an empty archetype exists to store entities without components.
+    // NOTE: This logic may be refactored in the future so that there is no 
+    //       need for this empty archetype! The issue being removing an entity's
+    //       last component. Also, keeping this simplifies other logic as it means
+    //       an entity always has an archetype!
+    ArchetypeID empty_archetype = ECS_create_archetype(ecs, 0);
+
+    // Ensure the archetype is valid and matches the hardcoded index.
+    if (empty_archetype == INVALID_ARCHETYPE || empty_archetype != EMPTY_ARCHETYPE_ID)
+    {
+        // TODO: Handle error!
+        assert(0);
+    }
 }
 
 ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
@@ -99,6 +114,9 @@ EntityID ECS_create_entity(ECS* ecs)
     ecs->entity_indices[entity].archetype_id = -1;
     ecs->entity_indices[entity].component_list_index = -1;
 
+    // Move the entity to the empty archetype.
+    ECS_move_archetype(ecs, entity, INVALID_ARCHETYPE, EMPTY_ARCHETYPE_ID);
+    
     return entity;
 }
 
@@ -229,7 +247,9 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
         }
     }
 
-    // Create new archetype to match entity signature.
+    // NOTE: Currently this should never happen, however, in the future if we update the 
+    // logic so that we don't create a new archetype for every new components bitset,
+    // then this will be necessary, so just future proofing.
     if (new_archetype_id == INVALID_ARCHETYPE)
     {
         new_archetype_id = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
@@ -261,17 +281,18 @@ void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid)
     return component;
 }
 
-
 // Internal helper functions
 ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
 {
+    // Currently we're allowing for an empty archetype to keep the logic simple,
+    // so that every entity lives in an archetype. May change in the future.
     Archetype* temp = realloc(ecs->archetypes,
         (size_t)(ecs->num_archetypes + 1) * sizeof(Archetype));
 
     if (!temp)
     {
         // TODO: handle failure.
-        return 0;
+        return INVALID_ARCHETYPE;
     }
     ecs->archetypes = temp;
 
@@ -308,23 +329,27 @@ ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
         }
     }
 
-    // Allocate for component lists.
-    void** component_lists_temp = malloc(
-        archetype->signature.num_components * sizeof(void*));
-
-    if (!component_lists_temp)
+    // Allowing for empty archetype.
+    if (archetype->signature.num_components > 0)
     {
-        // TODO: Handle failure.
-        return 0;
-    }
+        // Allocate for component lists.
+        void** component_lists_temp = malloc(
+            archetype->signature.num_components * sizeof(void*));
 
-    archetype->component_lists = component_lists_temp;
+        if (!component_lists_temp)
+        {
+            // TODO: Handle failure.
+            return INVALID_ARCHETYPE;
+        }
 
-    // Initialise component list pointers to nullptr, otherwise when we try to realloc
-    // they will have garbage values and fail.
-    for (int i = 0; i < archetype->signature.num_components; ++i)
-    {
-        archetype->component_lists[i] = 0;
+        archetype->component_lists = component_lists_temp;
+
+        // Initialise component list pointers to nullptr, otherwise when we try to realloc
+        // they will have garbage values and fail.
+        for (int i = 0; i < archetype->signature.num_components; ++i)
+        {
+            archetype->component_lists[i] = 0;
+        }
     }
 
     // Add the archetype to all systems that fit it's signature.
@@ -343,83 +368,73 @@ ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
 void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
     ArchetypeID new_archetype_id)
 {
-    if (new_archetype_id == INVALID_ARCHETYPE)
-    {
-        // TODO: Handle error.
-        return;
-    }
-    Archetype* new_archetype = &ecs->archetypes[new_archetype_id];
-
-    Archetype* old_archetype = 0;
-
-    if (old_archetype_id != INVALID_ARCHETYPE)
-    {
-        old_archetype = &ecs->archetypes[old_archetype_id];
-    }
-
-    // Move an entity to a new archetype, copy data from old and remove if exists.
-    // The entity may not have an old archetype.
-    const EntityIndex old_entity_index = ecs->entity_indices[id];
-
     // Add the entity to the new archetype.
+    Archetype* new_archetype = &ecs->archetypes[new_archetype_id];
     Archetype_add_entity(ecs, new_archetype, id);
 
     // Update information on where the entity is.
     ecs->entity_indices[id].archetype_id = new_archetype_id;
     ecs->entity_indices[id].component_list_index = new_archetype->entity_count - 1;
 
-    // Copy old data if it exists.
-    if (old_archetype)
+    // Check for an old archetype.
+    Archetype* old_archetype = 0;
+    if (old_archetype_id != INVALID_ARCHETYPE)
     {
-        // We want to find the matching components in the old and new archetypes,
-        // copy from old to new if they match. Sadly we need an O(N^2) loop to
-        // find the index of the components in the old archetype.
-        
-        // For each component in the new archetype, search the old archetype for a matching one.
-        for (int i = 0; i < new_archetype->signature.num_components; ++i)
-        {
-            ComponentID cid_new = new_archetype->signature.infos[i].id;
-
-            int old_component_list_i = -1;
-            for (int j = 0; j < old_archetype->signature.num_components; ++j)
-            {
-                ComponentID cid_old = old_archetype->signature.infos[j].id;
-                if (cid_new == cid_old) 
-                {
-                    old_component_list_i = j;
-                    break;
-                }
-            }
-            
-            // Not found, so nothing to copy from old to new.
-            if (old_component_list_i == -1) continue;
-
-            const ComponentInfo info = ecs->component_infos[cid_new];
-
-            // Convert void* to byte array so we can do pointer arithmetic.
-
-            const void* vsrc = old_archetype->component_lists[old_component_list_i];
-            void* vdest = new_archetype->component_lists[i];
-
-            const uint8_t* src = (uint8_t*)(vsrc);
-            uint8_t* dest = (uint8_t*)(vdest);
-
-            const uint32_t src_offset = (uint32_t)(old_entity_index.component_list_index) * info.size;
-            const uint32_t dest_offset = (uint32_t)(new_archetype->entity_count - 1) * info.size;
-
-            // Copy the old data to the new archetype.
-            memcpy(dest + dest_offset, src + src_offset, info.size);
-            
-
-            // Get location of entity in old archetype.
-            // TODO: WHAT? WHY?
-
-
-        }
-
-        // Remove old data from archetype.
-        Archetype_remove_entity(ecs, old_archetype, old_entity_index.component_list_index);
+        old_archetype = &ecs->archetypes[old_archetype_id];
     }
+    if (!old_archetype)
+    {
+        return;
+    }
+
+    // Copy data from old archetype to new and remove from old if exists.
+    const EntityIndex old_entity_index = ecs->entity_indices[id];
+
+    // We want to find the matching components in the old and new archetypes,
+    // copy from old to new if they match. Sadly we need an O(N^2) loop to
+    // find the index of the components in the old archetype.
+        
+    // For each component in the new archetype, search the old archetype for a matching one.
+    for (int i = 0; i < new_archetype->signature.num_components; ++i)
+    {
+        ComponentID cid_new = new_archetype->signature.infos[i].id;
+
+        int old_component_list_i = -1;
+        for (int j = 0; j < old_archetype->signature.num_components; ++j)
+        {
+            ComponentID cid_old = old_archetype->signature.infos[j].id;
+            if (cid_new == cid_old) 
+            {
+                old_component_list_i = j;
+                break;
+            }
+        }
+            
+        // Not found, so nothing to copy from old to new.
+        if (old_component_list_i == -1) continue;
+
+        const ComponentInfo info = ecs->component_infos[cid_new];
+
+        // Convert void* to byte array so we can do pointer arithmetic.
+
+        const void* vsrc = old_archetype->component_lists[old_component_list_i];
+        void* vdest = new_archetype->component_lists[i];
+
+        const uint8_t* src = (uint8_t*)(vsrc);
+        uint8_t* dest = (uint8_t*)(vdest);
+
+        const uint32_t src_offset = (uint32_t)(old_entity_index.component_list_index) * info.size;
+        const uint32_t dest_offset = (uint32_t)(new_archetype->entity_count - 1) * info.size;
+
+        // Copy the old data to the new archetype.
+        memcpy(dest + dest_offset, src + src_offset, info.size);
+
+        // Get location of entity in old archetype.
+        // TODO: WHAT? WHY?
+    }
+
+    // Remove old data from archetype.
+    Archetype_remove_entity(ecs, old_archetype, old_entity_index.component_list_index);
 }
 
 inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype, 
@@ -476,7 +491,13 @@ inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
 inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype, 
     int entity_index)
 {
-    // TODO: What if entity count is 0?
+    // Archetype already empty, should not happen.
+    if (archetype->entity_count == 0)
+    {
+        // TODO: Handle logic error?
+        assert(0);
+        return;
+    }
 
     // Handle easy case of only one entity.
     if (archetype->entity_count == 1)
@@ -485,20 +506,19 @@ inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype,
         return;
     }
 
-
-
     // TODO: how do we update the old entitiy, need an index to id..... but in
     //       archetype damn it.
     int last_entity_index = archetype->entity_count - 1;
 
+    // Copy the components from the last entity in the archetype over the top
+    // of the one we're removing.
     for (int i = 0; i < archetype->signature.num_components; ++i)
     {
+        uint8_t* component_list = (uint8_t*)(archetype->component_lists[i]);
         const uint32_t component_size = archetype->signature.infos[i].size;
         
-        const uint32_t component_to_remove = entity_index * component_size * i;
-        const uint32_t component_to_copy = last_entity_index * component_size * i;
-
-        uint8_t* component_list = (uint8_t*)(archetype->component_lists[i]);
+        const uint32_t component_to_remove = entity_index * component_size;
+        const uint32_t component_to_copy = last_entity_index * component_size;
 
         // Copy the last component over the component we're removing.
         memcpy(component_list + component_to_remove,
