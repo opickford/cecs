@@ -446,7 +446,7 @@ inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
         // TODO: Grow by factor.
         const float GROWTH_FACTOR = 0.25f;
 
-        int extra = archetype->entity_capacity * GROWTH_FACTOR;
+        int extra = (int)(archetype->entity_capacity * GROWTH_FACTOR);
         if (extra == 0) extra = 1;
 
         archetype->entity_capacity += extra;
