@@ -104,7 +104,6 @@ void log_archetypes(ECS* ecs)
     printf("-----------\n\n");
 }
 
-
 int main()
 {
     ECS ecs;
@@ -113,6 +112,7 @@ int main()
     position_component = ECS_register_component(&ecs, sizeof(Position));
     velocity_component = ECS_register_component(&ecs, sizeof(Velocity));
     health_component = ECS_register_component(&ecs, sizeof(Health));
+
 
     // Register a test system that uses both components.
     // TODO: Make nicer somehow idk?
@@ -131,16 +131,12 @@ int main()
     EntityID e0 = ECS_create_entity(&ecs);
 
     // TODO: Could return void* for component?
-    ECS_add_component(&ecs, e0, position_component);
-
-    Position* e0_pos = ECS_get_component(&ecs, e0, position_component);
+    Position* e0_pos = ECS_add_component(&ecs, e0, position_component);
     e0_pos->x = 1;
     e0_pos->y = 1;
     e0_pos->z = 1;
 
-    ECS_add_component(&ecs, e0, velocity_component);
-
-    Velocity* e0_vel = ECS_get_component(&ecs, e0, velocity_component);
+    Velocity* e0_vel = ECS_add_component(&ecs, e0, velocity_component);
     e0_vel->vx = -1;
     e0_vel->vy = -1;
     e0_vel->vz = -1;
@@ -148,8 +144,6 @@ int main()
     
     ECS_remove_component(&ecs, e0, velocity_component);
     
-
-
     EntityID e1 = ECS_create_entity(&ecs);
     ECS_add_component(&ecs, e1, velocity_component);
     ECS_add_component(&ecs, e1, position_component);
@@ -161,9 +155,11 @@ int main()
 
     ECS_destroy_entity(&ecs, e1);
     
+    e0_vel = ECS_add_component(&ecs, e0, velocity_component);
+    *e0_vel = (Velocity){ 1,2,3 };
 
     // TODO: Make a func pointer in the system and let ecs tick.
     test_system_func(&ecs, test_system);
-
+    
 	return 0;
 }

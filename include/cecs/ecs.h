@@ -55,7 +55,7 @@ SystemID ECS_register_system(ECS* ecs);
 EntityID ECS_create_entity(ECS* ecs);
 void ECS_destroy_entity(ECS* ecs, EntityID id);
 
-void ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid);
+void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid);
 void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid);
 void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
 

@@ -164,15 +164,15 @@ void ECS_destroy_entity(ECS* ecs, EntityID id)
     }
 }
 
-void ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
+void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
 {
     const ComponentsBitset old_components_bitset = ecs->entity_components_bitsets[eid];
     const ComponentID component_bitset = COMPONENT_ID_TO_BITSET(cid);
 
-    // Entity already has component.
+    // Entity already has component, return that component instead.
     if (old_components_bitset & component_bitset)
     {
-        return;
+        return ECS_get_component(ecs, eid, cid);
     }
  
     // Update entity's signature with the new component.
@@ -208,7 +208,8 @@ void ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
 
     ECS_move_archetype(ecs, eid, old_archetype_id, new_archetype_id);
 
-    // TODO: Return void pointer to component?
+    // Return pointer to new component.
+    return ECS_get_component(ecs, eid, cid);
 }
 
 void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
@@ -544,8 +545,9 @@ inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype,
     const EntityID entity_to_remove = archetype->index_to_entity[last_entity_index];
     archetype->index_to_entity[entity_index] = entity_to_remove;
 
-    // Update the entity's index in the ecs.
-    ecs->entity_indices[entity_to_remove].component_list_index = entity_index;
+    // Update the entity's index in the ecs to reflect it's been removed from its archetype.
+    ecs->entity_indices[entity_to_remove].component_list_index = -1;
+    ecs->entity_indices[entity_to_remove].archetype_id = INVALID_ARCHETYPE;
 
     // 'Remove' the last entity.
     --archetype->entity_count;
