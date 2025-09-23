@@ -69,11 +69,8 @@ void test_system_func(ECS* ecs, System* system)
         ArchetypeID archetype_id = system->archetype_ids[si];
         Archetype* archetype = &ecs->archetypes[archetype_id];
 
-        int positions_i = Archetype_find_component_list(archetype, position_component);
-        Position* positions = archetype->component_lists[positions_i];
-
-        int velocities_i = Archetype_find_component_list(archetype, velocity_component);
-        Velocity* velocities = archetype->component_lists[velocities_i];
+        Position* positions = Archetype_get_component_list(archetype, position_component);
+        Velocity* velocities = Archetype_get_component_list(archetype, velocity_component);
 
         for (int i = 0; i < archetype->entity_count; ++i)
         {

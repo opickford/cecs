@@ -43,19 +43,20 @@ inline void Archetype_destroy(Archetype* archetype)
 
 // TODO: Currently a linear search, not ideal. Low number of components should be 
 //       fine but really want to improve this.
-inline int Archetype_find_component_list(Archetype* archetype, ComponentID cid)
+// TODO: This sort of thing could be cached right? DEFINITELY. maybe this could relate to doing 'views'.
+inline void* Archetype_get_component_list(Archetype* archetype, ComponentID cid)
 {
     const ComponentsSignature* signature = &archetype->signature;
     for (int i = 0; i < signature->num_components; ++i)
     {
         if (signature->infos[i].id == cid)
         {
-            return i;
+            return archetype->component_lists[i];
         }
     }
 
     // TODO: How else.
-    return -1;
+    return 0;
 }
 
 

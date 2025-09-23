@@ -266,17 +266,13 @@ void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid)
     
     int size = ecs->component_infos[cid].size;
 
-    int i = Archetype_find_component_list(archetype, cid);
-    if (i == -1)
+    // Convert to uint8_t for pointer arithmetic.
+    uint8_t* component_list = Archetype_get_component_list(archetype, cid);
+    if (component_list == 0)
     {
         // TODO: Handle failure
         return 0;
     }
-
-    //ComponentInfo cinfo = ecs->component_infos[cid];
-
-    // Convert to uint8_t for pointer arithmetic.
-    uint8_t* component_list = archetype->component_lists[i];
     
     void* component = component_list + ei.component_list_index * size;
     return component;
