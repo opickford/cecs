@@ -4,7 +4,7 @@
 #include "archetype.h"
 #include "component.h"
 #include "entity.h"
-#include "system.h"
+#include "view.h"
 
 // The empty archetype must be the first created.
 #define EMPTY_ARCHETYPE_ID 0
@@ -40,16 +40,16 @@ typedef struct
     int num_archetypes;
     Archetype* archetypes;
 
-    // Systems
-    int num_systems;
-    System* systems;
+    // Views
+    int num_views;
+    View* views;
 
 } ECS;
 
 void ECS_init(ECS* ecs);
 
 ComponentID ECS_register_component(ECS* ecs, uint32_t component_size);
-SystemID ECS_register_system(ECS* ecs);
+ViewID ECS_register_view(ECS* ecs);
 
 // TODO: Create/destroy? 
 EntityID ECS_create_entity(ECS* ecs);

@@ -49,24 +49,24 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
     return cid;
 }
 
-SystemID ECS_register_system(ECS* ecs)
+ViewID ECS_register_view(ECS* ecs)
 {
-    System* temp_systems = realloc(ecs->systems, (size_t)(ecs->num_systems + 1) * sizeof(System));
-    if (!temp_systems)
+    View* temp_views = realloc(ecs->views, (size_t)(ecs->num_views + 1) * sizeof(View));
+    if (!temp_views)
     {
         // TODO: Handle failure
         return -1;
     }
-    ecs->systems = temp_systems;
+    ecs->views = temp_views;
 
-    // Initialise the new system
-    SystemID system_id = ecs->num_systems;
-    System* system = &ecs->systems[system_id];
-    System_init(system);
+    // Initialise the new view
+    ViewID view_id = ecs->num_views;
+    View* view = &ecs->views[view_id];
+    View_init(view);
 
-    ++ecs->num_systems;
+    ++ecs->num_views;
 
-    return system_id;
+    return view_id;
 }
 
 EntityID ECS_create_entity(ECS* ecs)
@@ -351,13 +351,13 @@ ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
         }
     }
 
-    // Add the archetype to all systems that fit it's signature.
-    for (int i = 0; i < ecs->num_systems; ++i)
+    // Add the archetype to all views that fit it's signature.
+    for (int i = 0; i < ecs->num_views; ++i)
     {
-        System* system = &ecs->systems[i];
-        if ((archetype_bitset & system->components_bitset) == system->components_bitset)
+        View* view = &ecs->views[i];
+        if ((archetype_bitset & view->components_bitset) == view->components_bitset)
         {
-            System_add_archetype(system, archetype_id);
+            View_add_archetype(view, archetype_id);
         }
     }
 

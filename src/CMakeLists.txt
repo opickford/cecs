@@ -6,7 +6,7 @@
 	"../include/cecs/component.h"
 	"../include/cecs/ecs.h"
 	"../include/cecs/entity.h"
-	"../include/cecs/system.h"
+	"../include/cecs/view.h"
 )
 
 add_library(cecs::cecs ALIAS cecs)

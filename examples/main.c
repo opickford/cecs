@@ -20,8 +20,8 @@ the ecs will store an array of archetypes, where the index is literally just the
 map, so if we create a new archetype, we add it to the list. This would mean we don't have hundreds of useless archetypes
 and shouldn't be too difficult to manage.
 
-Also, lets say we have multiple systems that use a 'Transform' component. But one system requires 'Transform' and 'Tag' one just
-requires Transform, this means the system that just requires Transform now wants entities from multiple archetypes. So it will
+Also, lets say we have multiple views that use a 'Transform' component. But one view requires 'Transform' and 'Tag' one just
+requires Transform, this means the view that just requires Transform now wants entities from multiple archetypes. So it will
 have to iterate through the multiple archetypes. Would be nice to abstract this into some 'view'.
 
 TODO:
@@ -62,14 +62,14 @@ typedef struct
     int max;
 } Health;
 
-void test_system_func(ECS* ecs, System* system)
+void test_view_func(ECS* ecs, View* view)
 {
     // TODO: make an iterator for this, would be significantly nicer.
-    // for (Archetype* archetype = &ecs->archetypes[system->archetype_ids[0]; )
+    // for (Archetype* archetype = &ecs->archetypes[view->archetype_ids[0]; )
 
-    for (int si = 0; si < system->num_archetypes; ++si)
+    for (int si = 0; si < view->num_archetypes; ++si)
     {
-        ArchetypeID archetype_id = system->archetype_ids[si];
+        ArchetypeID archetype_id = view->archetype_ids[si];
         Archetype* archetype = &ecs->archetypes[archetype_id];
 
         Position* positions = Archetype_get_component_list(archetype, position_component);
@@ -114,13 +114,13 @@ int main()
     health_component = ECS_register_component(&ecs, sizeof(Health));
 
 
-    // Register a test system that uses both components.
+    // Register a test view that uses both components.
     // TODO: Make nicer somehow idk?
-    SystemID test_system_id = ECS_register_system(&ecs);
-    System* test_system = &ecs.systems[test_system_id];
+    ViewID test_view_id = ECS_register_view(&ecs);
+    View* test_view = &ecs.views[test_view_id];
 
     // TODO: Define for this?
-    test_system->components_bitset =
+    test_view->components_bitset =
         COMPONENT_ID_TO_BITSET(position_component) | 
         COMPONENT_ID_TO_BITSET(velocity_component);
 
@@ -159,8 +159,8 @@ int main()
     e0_vel = ECS_add_component(&ecs, e0, velocity_component);
     *e0_vel = (Velocity){ 1,2,3 };
 
-    // TODO: Make a func pointer in the system and let ecs tick.
-    test_system_func(&ecs, test_system);
+    // TODO: Make a func pointer in the view and let ecs tick.
+    test_view_func(&ecs, test_view);
     
 	return 0;
 }
