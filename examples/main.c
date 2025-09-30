@@ -62,7 +62,7 @@ typedef struct
     int max;
 } Health;
 
-void test_view_func(ECS* ecs, View* view)
+void test_func(ECS* ecs, View* view)
 {
     // TODO: make an iterator for this, would be significantly nicer.
     // for (Archetype* archetype = &ecs->archetypes[view->archetype_ids[0]; )
@@ -160,7 +160,7 @@ int main()
     *e0_vel = (Velocity){ 1,2,3 };
 
     // TODO: Make a func pointer in the view and let ecs tick.
-    test_view_func(&ecs, test_view);
+    test_func(&ecs, test_view);
     
 	return 0;
 }
