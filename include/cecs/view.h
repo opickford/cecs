@@ -6,34 +6,38 @@
 
 #include <string.h>
 
-/*
-TODO: Comments.
-
-View must store the archetypes it cares about, the ecs can manage this for us.
-
-*/
-
 typedef uint8_t ViewID;
 
+/* A view holds ptrs to the archetypes matching it's component bitset. 
+   The ECS manages adding the archetypes to the view.
+*/ 
 typedef struct
 {
     ArchetypeID* archetype_ids;
     int num_archetypes;
 
-    ComponentsBitset components_bitset;
+
+    ComponentsBitset components_bitset; // TODO: Rename include
+    // ComponentsBitset exclude;
+
+    // TODO: Define some ComponentsBitset exclude to allow us to say no to
+    //       components. Document why we might want this.
 
 } View;
 
 inline void View_init(View* view)
 {
     memset(view, 0, sizeof(View));
+
+    // TODO: Should take in a components_bitset? 
 }
 
 inline void View_add_archetype(View* view, ArchetypeID archetype_id)
 {
     // TODO: again, all of this stuff could use some vector implementation
     //       or just grow array by a factor to avoid allocs.
-
+    // TODO: Create another .lib git project for my data structures 
+    //       (header only?) 
     ArchetypeID* temp_archetype_ids = realloc(view->archetype_ids,
         (view->num_archetypes + 1) * sizeof(ArchetypeID));
 

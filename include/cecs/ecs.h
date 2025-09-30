@@ -6,10 +6,11 @@
 #include "entity.h"
 #include "view.h"
 
-// The empty archetype must be the first created.
+// To ensure that all entities have an archetype, we must first 
+// create an empty archetype.
 #define EMPTY_ARCHETYPE_ID 0
 
-// TODO: Just redo everything really.
+// TODO: Comments for public functions.
 
 typedef struct
 {
@@ -49,6 +50,9 @@ typedef struct
 void ECS_init(ECS* ecs);
 
 ComponentID ECS_register_component(ECS* ecs, uint32_t component_size);
+
+// TODO: Currently all views must be registered before entities are created,
+//       we should allow for new views to be created at any point.
 ViewID ECS_register_view(ECS* ecs);
 
 // TODO: Create/destroy? 
