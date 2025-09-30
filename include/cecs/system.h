@@ -7,7 +7,7 @@
 #include <string.h>
 
 /*
-TODO:
+TODO: Comments.
 
 System must store the archetypes it cares about, the ecs can manage this for us.
 

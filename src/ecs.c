@@ -26,6 +26,8 @@ void ECS_init(ECS* ecs)
 
 ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
 {
+    // TODO: Handle error when exceeds size.
+
     ComponentInfo* temp = realloc(ecs->component_infos, 
         (size_t)(ecs->num_components + 1) * sizeof(ComponentInfo));
 

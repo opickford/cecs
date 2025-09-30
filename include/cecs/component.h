@@ -24,7 +24,7 @@ ComponentsSignature:
 
 // Represents a bitset of components.
 typedef uint16_t ComponentsBitset; // TODO: Just signature?
-typedef uint8_t ComponentID;
+typedef uint8_t ComponentID; // TODO: Rename ids like ComponentId?
 
 #define COMPONENT_BITSET_SIZE 16 // TODO: Rename to MAX COMPONENTS?
 #define COMPONENTS_EMPTY_BITSET 0

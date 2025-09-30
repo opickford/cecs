@@ -64,6 +64,9 @@ typedef struct
 
 void test_system_func(ECS* ecs, System* system)
 {
+    // TODO: make an iterator for this, would be significantly nicer.
+    // for (Archetype* archetype = &ecs->archetypes[system->archetype_ids[0]; )
+
     for (int si = 0; si < system->num_archetypes; ++si)
     {
         ArchetypeID archetype_id = system->archetype_ids[si];
@@ -123,11 +126,12 @@ int main()
 
 
     int num_entities = 100000;
-
+    
+    // TODO: Document how component pointers are only valid until the 
+    //       next component is added!! or like how it actually works....
     
     EntityID e0 = ECS_create_entity(&ecs);
 
-    // TODO: Could return void* for component?
     Position* e0_pos = ECS_add_component(&ecs, e0, position_component);
     e0_pos->x = 1;
     e0_pos->y = 1;
