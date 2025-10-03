@@ -6,6 +6,8 @@
 #include "entity.h"
 #include "view.h"
 
+#include <chds/vector.h>
+
 // To ensure that all entities have an archetype, we must first 
 // create an empty archetype.
 #define EMPTY_ARCHETYPE_ID 0
@@ -18,6 +20,8 @@ typedef struct
     int component_list_index;
 } EntityIndex;
 
+// TODO: Move this to the implementation file to hide it????
+//       This will stop us from exposing Vector to the user.
 typedef struct
 {
     // Entities
@@ -33,17 +37,9 @@ typedef struct
     // archetype.
     EntityIndex* entity_indices; 
 
-    // Components
-    int num_components;
-    ComponentInfo* component_infos;
-
-    // Archetypes
-    int num_archetypes;
-    Archetype* archetypes;
-
-    // Views
-    int num_views;
-    View* views;
+    Vector(ComponentInfo) component_infos;
+    Vector(Archetype) archetypes;
+    Vector(View) views;
 
 } ECS;
 

@@ -75,7 +75,10 @@ void test_func(ECS* ecs, View* view)
         Position* positions = Archetype_get_component_list(archetype, position_component);
         Velocity* velocities = Archetype_get_component_list(archetype, velocity_component);
 
-        for (int i = 0; i < archetype->entity_count; ++i)
+        // TODO: Make some Archetype_num_entities func to hide the Vector?
+
+        int num_entities = Vector_size(archetype->index_to_entity);
+        for (int i = 0; i < num_entities; ++i)
         {
             Position p = positions[i];
             Velocity v = velocities[i];
@@ -91,13 +94,18 @@ void test_func(ECS* ecs, View* view)
 
 void log_archetypes(ECS* ecs)
 {
-    for (int i = 0; i < ecs->num_archetypes; ++i)
+    // TODO: It's not ideal exposing the vectors to the user.
+    const int num_archetypes = Vector_size(ecs->archetypes);
+    for (int i = 0; i < num_archetypes; ++i)
     {
         const Archetype* archetype = &ecs->archetypes[i];
         printf("Archetype\n");
         printf("bitset: %d\n" , archetype->signature.bitset);
         printf("num_components %d\n", archetype->signature.num_components);
-        printf("num_entites %d\n", archetype->entity_count);
+
+        // TODO: Make some Archetype_num_entities func to hide the Vector?
+        int num_entities = Vector_size(archetype->index_to_entity);
+        printf("num_entites %d\n", num_entities);
 
         printf("\n");
     }

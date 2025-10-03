@@ -4,6 +4,8 @@
 #include "component.h"
 #include "entity.h"
 
+#include <chds/vector.h>
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -14,10 +16,8 @@ typedef struct
 {
     ComponentsSignature signature;
     
-    int entity_count;
-    int entity_capacity;
-
-    EntityID* index_to_entity;
+    // TODO: Some sort of map?
+    Vector(EntityID) index_to_entity;
     
     void** component_lists;
 

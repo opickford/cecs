@@ -14,8 +14,9 @@ add_library (cecs STATIC
 
 add_library(cecs::cecs ALIAS cecs)
 
+# TODO: Should be private so we don't expose vector to user.
 target_link_libraries(cecs 
-    PRIVATE
+    PUBLIC
         chds::chds
 )
 
