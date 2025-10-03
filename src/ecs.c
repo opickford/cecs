@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-
 void ECS_init(ECS* ecs)
 {
     memset(ecs, 0, sizeof(ECS));

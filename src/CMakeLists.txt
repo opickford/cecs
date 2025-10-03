@@ -15,7 +15,7 @@ add_library (cecs STATIC
 add_library(cecs::cecs ALIAS cecs)
 
 target_link_libraries(cecs 
-    INTERFACE 
+    PRIVATE
         chds::chds
 )
 
@@ -32,3 +32,4 @@ target_include_directories(cecs
 set_target_properties(cecs PROPERTIES
     DEBUG_POSTFIX d
 )
+
