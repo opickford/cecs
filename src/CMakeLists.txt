@@ -1,4 +1,7 @@
-﻿add_library (cecs STATIC 
+﻿list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs/chds")
+find_package(chds REQUIRED)
+
+add_library (cecs STATIC 
 	"ecs.c" 
 
 	# Headers for Visual Studio
@@ -10,6 +13,11 @@
 )
 
 add_library(cecs::cecs ALIAS cecs)
+
+target_link_libraries(cecs 
+    INTERFACE 
+        chds::chds
+)
 
 target_include_directories(cecs 
 	PUBLIC
