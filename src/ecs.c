@@ -129,11 +129,6 @@ int ECS_view_iter_next(const ECS* ecs, ViewIter* it)
     return 1;
 }
 
-int ECS_archetype_num_entities(const ECS* ecs, ArchetypeID aid)
-{
-    return Archetype_num_entities(&ecs->archetypes[aid]);
-}
-
 void* ECS_get_component_list(ECS* ecs, ViewIter it, ComponentID cid)
 {
     return Archetype_get_component_list(&ecs->archetypes[*(it.aid - 1)], cid);

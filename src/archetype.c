@@ -21,11 +21,6 @@ void Archetype_destroy(Archetype* archetype)
     archetype = 0;
 }
 
-size_t Archetype_num_entities(const Archetype* archetype)
-{
-    return Vector_size(archetype->index_to_entity);
-}
-
 // TODO: Currently a linear search, not ideal. Low number of components should be 
 //       fine but really want to improve this.
 // TODO: This sort of thing could be cached right? DEFINITELY. maybe this could relate to doing 'views'.

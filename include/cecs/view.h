@@ -25,6 +25,8 @@ typedef struct
 
 } View;
 
+// TODO: Needs refactor.
+// TODO: Can contain pointer to ecs.
 typedef struct
 {
     ViewID vid;
@@ -38,11 +40,6 @@ typedef struct
 
 } ViewIter;
 
-inline int ViewIter_next(ViewIter* it)
-{
-    
-}
-
 /* TODO: Not used. Do we need it?
 inline void View_init(View* view)
 {
@@ -53,6 +50,7 @@ inline void View_init(View* view)
 
 
 
+// TODO: Private, user should not call this.
 inline void View_destroy(View* view)
 {
     Vector_destroy(view->archetype_ids);
