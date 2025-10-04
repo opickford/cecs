@@ -58,6 +58,7 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
     return ci.id;
 }
 
+// TODO: Some function for passing in component ids separately to create bitsets.
 ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
 {
     // TODO: Handle if include/exclude have matching bits! Invalid!
@@ -122,7 +123,7 @@ int ECS_view_iter_next(ViewIter* it)
 {
     if (it->current == it->end) return 0;
 
-    // TODO: Current is misleading as this pushes us past.
+    // TODO: Current is misleading as this pushes us past current?
     ++it->current;
 
     // Move to the next archetype.

@@ -7,25 +7,19 @@
 
 typedef uint8_t ViewID;
 
-// TODO: Some function for passing in component ids separately.
-
 typedef struct View View;
 typedef struct ECS ECS;
-
-// TODO: Needs refactor.
 
 typedef struct
 {
     const ECS* ecs;
-
     ViewID vid;
 
     uint32_t current;
     uint32_t end;
 
-    ArchetypeID* aid;
-
-    uint32_t num_entities;
+    ArchetypeID* aid;      // Current archetype.
+    uint32_t num_entities; // Current number of entities in archetype.
 
 } ViewIter;
 
