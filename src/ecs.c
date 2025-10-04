@@ -1,10 +1,29 @@
 #include "ecs.h"
 
+#include "archetype_internal.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 
+static ArchetypeID ECS_create_archetype(ECS* ecs, 
+    ComponentsBitset archetype_bitset);
+
+static void ECS_move_archetype(ECS* ecs, 
+    EntityID id, 
+    ArchetypeID old_archetype_id,
+    ArchetypeID new_archetype_id);
+
+static void Archetype_add_entity(const ECS* ecs, 
+    Archetype* archetype,
+    EntityID eid);
+
+static void Archetype_remove_entity(ECS* ecs, 
+    Archetype* archetype,
+    int entity_index);
+
+// ECS API
 void ECS_init(ECS* ecs)
 {
     memset(ecs, 0, sizeof(ECS));
@@ -36,15 +55,58 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
     return ci.id;
 }
 
-ViewID ECS_register_view(ECS* ecs)
+ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
 {
-    ViewID view_id = Vector_size(ecs->views);
-    Vector_push_back(ecs->views, (View) { 0 });
+    // TODO: Handle if include/exclude have matching bits! Invalid!
+    ViewID num_views = Vector_size(ecs->views);
 
-    View* view = &ecs->views[view_id];
-    View_init(view);
+    // Look for existing view.
+    // TODO: Map would be nicer.
+    for (int i = 0; i < num_views; ++i)
+    {
+        View* v = &ecs->views[i];
+        if (v->include == include &&
+            v->exclude == exclude)
+        {
+            return i;
+        }
+    }
 
-    return view_id;
+    View view =
+    {
+        .include = include,
+        .exclude = exclude
+    };
+
+    Vector_push_back(ecs->views, view);
+
+    // Load matching archetypes into ecs.
+    int num_archetypes = Vector_size(ecs->archetypes);
+    for (int aid = 0; aid < num_archetypes; ++aid)
+    {
+        const ComponentsBitset bits = ecs->archetypes[aid].signature.bitset;
+        
+        // TODO: Some helper function for this?
+        // Archetype bitset must have at least the include bits but
+        // none of the exclude ones.
+        if ((bits & include) == include &&
+            (bits & exclude) == 0)
+        {
+            Vector_push_back(view.archetype_ids, aid);
+        }
+    }
+
+    return num_views;
+}
+
+int ECS_archetype_num_entities(const ECS* ecs, ArchetypeID aid)
+{
+    return Archetype_num_entities(&ecs->archetypes[aid]);
+}
+
+void* ECS_get_component_list(ECS* ecs, ArchetypeID aid, ComponentID cid)
+{
+    return Archetype_get_component_list(&ecs->archetypes[aid], cid);
 }
 
 EntityID ECS_create_entity(ECS* ecs)
@@ -262,7 +324,10 @@ void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid)
 }
 
 // Internal helper functions
-ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
+// TODO: Should these private functions be moved elsewhere? They're not
+//       intended to be part of the public api.
+static ArchetypeID ECS_create_archetype(ECS* ecs, 
+    ComponentsBitset archetype_bitset)
 {
     // Currently we're allowing for an empty archetype to keep the logic simple,
     // so that every entity lives in an archetype. May change in the future.
@@ -272,6 +337,7 @@ ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
             .bitset = archetype_bitset
         }
     };
+
     Vector_push_back(ecs->archetypes, new_archetype);
     Archetype* archetype = &ecs->archetypes[archetype_id];
 
@@ -332,16 +398,18 @@ ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset)
     for (int i = 0; i < num_views; ++i)
     {
         View* view = &ecs->views[i];
-        if ((archetype_bitset & view->components_bitset) == view->components_bitset)
+
+        if ((archetype_bitset & view->include) == view->include &&
+            (archetype_bitset & view->exclude) == 0)
         {
-            View_add_archetype(view, archetype_id);
+            Vector_push_back(view->archetype_ids, archetype_id);
         }
     }
 
     return archetype_id;
 }
 
-void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
+static void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
     ArchetypeID new_archetype_id)
 {
     // Add the entity to the new archetype.
@@ -423,9 +491,11 @@ void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
     Archetype_remove_entity(ecs, old_archetype, old_entity_index.component_list_index);
 }
 
-inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype, 
+static void Archetype_add_entity(const ECS* ecs, Archetype* archetype, 
     EntityID eid)
 {
+    // TODO: Move to archetype.c
+
     // TODO: I fear we have some logic error here.
     //       If we remove an entity from the archetype, now we don't need
     //       to realloc for the entity as there is spare capacity, however,
@@ -458,7 +528,7 @@ inline void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
     }
 }
 
-inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype, 
+static void Archetype_remove_entity(ECS* ecs, Archetype* archetype, 
     int entity_index)
 {
     // TODO: Implement vector remove functionality. Or some sort of function
@@ -510,6 +580,8 @@ inline void Archetype_remove_entity(const ECS* ecs, Archetype* archetype,
     // Update the entity we've moved's index.
     const EntityID entity_to_remove = archetype->index_to_entity[last_entity_index];
     archetype->index_to_entity[entity_index] = entity_to_remove;
+
+    // TODO: Should this ecs stuff be done elsewhere??????
 
     // Update the entity's index in the ecs to reflect it's been removed from its archetype.
     ecs->entity_indices[entity_to_remove].component_list_index = -1;

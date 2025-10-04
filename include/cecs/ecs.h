@@ -1,6 +1,7 @@
 #ifndef ECS_H
 #define ECS_H
 
+// TODO: Forward declarations?
 #include "archetype.h"
 #include "component.h"
 #include "entity.h"
@@ -43,28 +44,31 @@ typedef struct
 
 } ECS;
 
+// ECS API
 void ECS_init(ECS* ecs);
+// TODO: ECS_destroy(ECS* ecs);
 
+// Component API
 ComponentID ECS_register_component(ECS* ecs, uint32_t component_size);
-
-// TODO: Currently all views must be registered before entities are created,
-//       we should allow for new views to be created at any point.
-ViewID ECS_register_view(ECS* ecs);
-
-// TODO: Create/destroy? 
-EntityID ECS_create_entity(ECS* ecs);
-void ECS_destroy_entity(ECS* ecs, EntityID id);
 
 void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid);
 void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid);
 void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
 
-// Internal helper functions.
-ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset);
-void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id, 
-    ArchetypeID new_archetype_id);
+// View API
+// TODO: Currently all views must be registered before entities are created,
+//       we should allow for new views to be created at any point.
+ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude);
 
-void Archetype_add_entity(const ECS* ecs, Archetype* archetype, EntityID eid);
-void Archetype_remove_entity(const ECS* ecs, Archetype* archetype, int entity_index);
+// TODO: These will be refactored to use iterators.
+void* ECS_get_component_list(ECS* ecs, ArchetypeID aid, ComponentID cid);
+int ECS_archetype_num_entities(const ECS* ecs, ArchetypeID aid);
+
+// Entity API
+// TODO: Create/destroy? 
+EntityID ECS_create_entity(ECS* ecs);
+void ECS_destroy_entity(ECS* ecs, EntityID id);
+
+
 
 #endif

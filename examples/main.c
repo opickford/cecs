@@ -8,36 +8,6 @@
 
 // TODO: Get a better example working, how can we define components.. - this cannot be done at compile time i believe.
 
-/*
-
-TODO:
-
-What i think we need is to define archetypes, essentially this is an entity with exactly the components of the archetype.
-the archetype then has the arrays of components where the arrays line up to make entities
-
-the ecs will store an array of archetypes, where the index is literally just the int? think about this, because if we have
-8 components, we would have 255 archetypes... This isn't really ideal. Instead i think we could define an archetype to index
-map, so if we create a new archetype, we add it to the list. This would mean we don't have hundreds of useless archetypes
-and shouldn't be too difficult to manage.
-
-Also, lets say we have multiple views that use a 'Transform' component. But one view requires 'Transform' and 'Tag' one just
-requires Transform, this means the view that just requires Transform now wants entities from multiple archetypes. So it will
-have to iterate through the multiple archetypes. Would be nice to abstract this into some 'view'.
-
-TODO:
-
-- Allow user to define components. 
-- Define an archetype, this contains an array of arrays of components.
-- Manage lists of components in archetypes
-
-
-
-
-
-*/
-
-
-
 // TODO: Refactor projects here like the range one, much nicer there!!!!
 
 
@@ -62,22 +32,19 @@ typedef struct
     int max;
 } Health;
 
-void test_func(ECS* ecs, View* view)
+static void test_func(ECS* ecs, View* view)
 {
     // TODO: make an iterator for this, would be significantly nicer.
     // for (Archetype* archetype = &ecs->archetypes[view->archetype_ids[0]; )
-
-    for (int si = 0; si < view->num_archetypes; ++si)
+    int num_archetypes = Vector_size(view->archetype_ids);
+    for (int si = 0; si < num_archetypes; ++si)
     {
-        ArchetypeID archetype_id = view->archetype_ids[si];
-        Archetype* archetype = &ecs->archetypes[archetype_id];
+        ArchetypeID aid = view->archetype_ids[si];
 
-        Position* positions = Archetype_get_component_list(archetype, position_component);
-        Velocity* velocities = Archetype_get_component_list(archetype, velocity_component);
+        Position* positions = ECS_get_component_list(ecs, aid, position_component);
+        Velocity* velocities = ECS_get_component_list(ecs, aid, velocity_component);
 
-        // TODO: Make some Archetype_num_entities func to hide the Vector?
-
-        int num_entities = Vector_size(archetype->index_to_entity);
+        int num_entities = ECS_archetype_num_entities(ecs, aid);
         for (int i = 0; i < num_entities; ++i)
         {
             Position p = positions[i];
@@ -91,7 +58,7 @@ void test_func(ECS* ecs, View* view)
     }
 }
 
-
+/*
 void log_archetypes(ECS* ecs)
 {
     // TODO: It's not ideal exposing the vectors to the user.
@@ -111,7 +78,7 @@ void log_archetypes(ECS* ecs)
     }
     printf("-----------\n\n");
 }
-
+*/
 int main()
 {
     ECS ecs;
@@ -124,15 +91,11 @@ int main()
 
     // Register a test view that uses both components.
     // TODO: Make nicer somehow idk?
-    ViewID test_view_id = ECS_register_view(&ecs);
-    View* test_view = &ecs.views[test_view_id];
-
-    // TODO: Define for this?
-    test_view->components_bitset =
-        COMPONENT_ID_TO_BITSET(position_component) | 
-        COMPONENT_ID_TO_BITSET(velocity_component);
-
-
+    ViewID test_view_id = ECS_view(&ecs,
+        COMPONENT_ID_TO_BITSET(position_component) | COMPONENT_ID_TO_BITSET(velocity_component),
+        0
+        );
+   
     int num_entities = 100000;
     
     // TODO: Document how component pointers are only valid until the 
@@ -167,8 +130,7 @@ int main()
     e0_vel = ECS_add_component(&ecs, e0, velocity_component);
     *e0_vel = (Velocity){ 1,2,3 };
 
-    // TODO: Make a func pointer in the view and let ecs tick.
-    test_func(&ecs, test_view);
+    test_func(&ecs, &ecs.views[test_view_id]);
     
 	return 0;
 }

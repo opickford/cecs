@@ -3,6 +3,8 @@ find_package(chds REQUIRED)
 
 add_library (cecs STATIC 
 	"ecs.c" 
+	"archetype.c"
+	"archetype_internal.h"
 
 	# Headers for Visual Studio
 	"../include/cecs/archetype.h"

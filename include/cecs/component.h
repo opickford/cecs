@@ -6,6 +6,8 @@
 /*
 
 TODO: Probably gotta rethink all of this at some point.
+// TODO: Write this out better anyways, don't need docs at top just above
+         types etc.
 
 ComponentID
 - The ECS stores an array of components, hence, ComponentID is an index into that array.
@@ -23,12 +25,16 @@ ComponentsSignature:
 */
 
 // Represents a bitset of components.
+// TODO: Issue this only allows for 16 components. 
+//       In the future we could probably expand this to some array of bitsets.
+//       but that should be in the CHDS lib?
 typedef uint16_t ComponentsBitset; // TODO: Just signature?
 typedef uint8_t ComponentID; // TODO: Rename ids like ComponentId?
 
 #define COMPONENT_BITSET_SIZE 16 // TODO: Rename to MAX COMPONENTS?
 #define COMPONENTS_EMPTY_BITSET 0
 
+// TODO: Should this be cast to something
 #define COMPONENT_ID_TO_BITSET(id) (1 << id)
 
 // TODO: Document.......... why all this......
@@ -40,10 +46,15 @@ typedef struct
     uint32_t size;
 } ComponentInfo;
 
+// TODO: We don't need include/exclude here right?
+// TODO: Also is this really just an ArchetypeSignature?
 typedef struct
 {
     ComponentsBitset bitset;
 
+    // TODO: Vector?
+    // TODO: If we use a vector then some sort of shrink to fit function
+    //       could be nice, unless we can reserve before??
     int num_components;
     ComponentInfo* infos;
 
