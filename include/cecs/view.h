@@ -25,6 +25,24 @@ typedef struct
 
 } View;
 
+typedef struct
+{
+    ViewID vid;
+
+    int current;
+    int end;
+
+    ArchetypeID* aid;
+
+    int count;
+
+} ViewIter;
+
+inline int ViewIter_next(ViewIter* it)
+{
+    
+}
+
 /* TODO: Not used. Do we need it?
 inline void View_init(View* view)
 {
@@ -32,6 +50,8 @@ inline void View_init(View* view)
 
     // TODO: Should take in a components_bitset? 
 }*/
+
+
 
 inline void View_destroy(View* view)
 {

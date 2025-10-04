@@ -99,14 +99,44 @@ ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
     return num_views;
 }
 
+ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
+{
+    View* view = &ecs->views[vid];
+
+    int num_entities = Vector_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
+
+    ViewIter it = {
+        .vid = vid,
+        .current = 0,
+        .end = Vector_size(view->archetype_ids),
+        .aid = view->archetype_ids,
+        .count = num_entities
+    };
+    return it;
+}
+
+int ECS_view_iter_next(const ECS* ecs, ViewIter* it)
+{
+    if (it->current == it->end) return 0;
+
+    // TODO: Current is misleading as this pushes us past.
+    ++it->current;
+
+
+    ++it->aid;
+    it->count = Vector_size(ecs->archetypes[*(it->aid - 1)].index_to_entity);
+
+    return 1;
+}
+
 int ECS_archetype_num_entities(const ECS* ecs, ArchetypeID aid)
 {
     return Archetype_num_entities(&ecs->archetypes[aid]);
 }
 
-void* ECS_get_component_list(ECS* ecs, ArchetypeID aid, ComponentID cid)
+void* ECS_get_component_list(ECS* ecs, ViewIter it, ComponentID cid)
 {
-    return Archetype_get_component_list(&ecs->archetypes[aid], cid);
+    return Archetype_get_component_list(&ecs->archetypes[*(it.aid - 1)], cid);
 }
 
 EntityID ECS_create_entity(ECS* ecs)

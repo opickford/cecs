@@ -9,6 +9,8 @@
 
 #include <chds/vector.h>
 
+// TODO: Terminology should be refactored to use table like names: column, row, field etc.
+
 // To ensure that all entities have an archetype, we must first 
 // create an empty archetype.
 #define EMPTY_ARCHETYPE_ID 0
@@ -56,12 +58,14 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid);
 void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
 
 // View API
-// TODO: Currently all views must be registered before entities are created,
-//       we should allow for new views to be created at any point.
+
+// TODO: Should these be named ECS_View??? Capitalised as type???
 ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude);
+ViewIter ECS_view_iter(const ECS* ecs, ViewID vid);
+int ECS_view_iter_next(const ECS* ecs, ViewIter* it);
 
 // TODO: These will be refactored to use iterators.
-void* ECS_get_component_list(ECS* ecs, ArchetypeID aid, ComponentID cid);
+void* ECS_get_component_list(ECS* ecs, ViewIter it, ComponentID cid);
 int ECS_archetype_num_entities(const ECS* ecs, ArchetypeID aid);
 
 // Entity API

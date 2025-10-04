@@ -32,20 +32,16 @@ typedef struct
     int max;
 } Health;
 
-static void test_func(ECS* ecs, View* view)
+static void test_func(ECS* ecs, ViewID view_id)
 {
-    // TODO: make an iterator for this, would be significantly nicer.
-    // for (Archetype* archetype = &ecs->archetypes[view->archetype_ids[0]; )
-    int num_archetypes = Vector_size(view->archetype_ids);
-    for (int si = 0; si < num_archetypes; ++si)
+    ViewIter it = ECS_view_iter(ecs, view_id);
+
+    while (ECS_view_iter_next(ecs, &it))
     {
-        ArchetypeID aid = view->archetype_ids[si];
+        Position* positions = ECS_get_component_list(ecs, it, position_component);
+        Velocity* velocities = ECS_get_component_list(ecs, it, velocity_component);
 
-        Position* positions = ECS_get_component_list(ecs, aid, position_component);
-        Velocity* velocities = ECS_get_component_list(ecs, aid, velocity_component);
-
-        int num_entities = ECS_archetype_num_entities(ecs, aid);
-        for (int i = 0; i < num_entities; ++i)
+        for (int i = 0; i < it.count; ++i)
         {
             Position p = positions[i];
             Velocity v = velocities[i];
@@ -130,7 +126,7 @@ int main()
     e0_vel = ECS_add_component(&ecs, e0, velocity_component);
     *e0_vel = (Velocity){ 1,2,3 };
 
-    test_func(&ecs, &ecs.views[test_view_id]);
+    test_func(&ecs, test_view_id);
     
 	return 0;
 }
