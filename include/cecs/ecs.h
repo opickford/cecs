@@ -36,7 +36,7 @@ ViewIter ECS_view_iter(const ECS* ecs, ViewID vid);
 // TODO: Rename ViewIter_next? Then it would be nice to go in view.h but can't
 //       really right?
 int ECS_view_iter_next(ViewIter* it);
-void* ECS_get_component_list(ViewIter it, ComponentID cid);
+void* ECS_get_column(ViewIter it, ComponentID cid);
 
 // Entity API
 EntityID ECS_create_entity(ECS* ecs);

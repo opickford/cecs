@@ -34,8 +34,8 @@ static void test_func(ECS* ecs, ViewID view_id)
     ViewIter it = ECS_view_iter(ecs, view_id);
     while (ECS_view_iter_next(&it))
     {
-        Position* positions = ECS_get_component_list(it, position_component);
-        Velocity* velocities = ECS_get_component_list(it, velocity_component);
+        Position* positions = ECS_get_column(it, position_component);
+        Velocity* velocities = ECS_get_column(it, velocity_component);
 
         for (uint32_t i = 0; i < it.num_entities; ++i)
         {

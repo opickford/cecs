@@ -8,7 +8,7 @@
 typedef struct
 {
     ArchetypeID archetype_id;
-    int component_list_index;
+    int column;
 } EntityIndex;
 
 typedef struct ECS

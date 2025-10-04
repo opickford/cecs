@@ -8,6 +8,7 @@
 
 #include <chds/vector.h>
 
+// Stores columns for entities matching a signature.
 typedef struct Archetype
 {
     ComponentsSignature signature;
@@ -15,13 +16,13 @@ typedef struct Archetype
     // TODO: Some sort of map?
     Vector(EntityID) index_to_entity;
 
-    void** component_lists;
+    void** columns;
 
 } Archetype;
 
 // TODO: A bit misleading as the ECS actually properly initialises this.
 void Archetype_init(Archetype* archetype);
 void Archetype_destroy(Archetype* archetype);
-void* Archetype_get_component_list(Archetype* archetype, ComponentID cid);
+void* Archetype_get_column(Archetype* archetype, ComponentID cid);
 
 #endif
