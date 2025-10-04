@@ -105,6 +105,7 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
     int num_entities = Vector_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
 
     ViewIter it = {
+        .ecs = ecs,
         .vid = vid,
         .current = 0,
         .end = Vector_size(view->archetype_ids),
@@ -114,7 +115,7 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
     return it;
 }
 
-int ECS_view_iter_next(const ECS* ecs, ViewIter* it)
+int ECS_view_iter_next(ViewIter* it)
 {
     if (it->current == it->end) return 0;
 
@@ -123,14 +124,14 @@ int ECS_view_iter_next(const ECS* ecs, ViewIter* it)
 
 
     ++it->aid;
-    it->count = Vector_size(ecs->archetypes[*(it->aid - 1)].index_to_entity);
+    it->count = Vector_size(it->ecs->archetypes[*(it->aid - 1)].index_to_entity);
 
     return 1;
 }
 
-void* ECS_get_component_list(ECS* ecs, ViewIter it, ComponentID cid)
+void* ECS_get_component_list(ViewIter it, ComponentID cid)
 {
-    return Archetype_get_component_list(&ecs->archetypes[*(it.aid - 1)], cid);
+    return Archetype_get_component_list(&it.ecs->archetypes[*(it.aid - 1)], cid);
 }
 
 EntityID ECS_create_entity(ECS* ecs)

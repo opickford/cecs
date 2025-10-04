@@ -25,7 +25,7 @@ typedef struct
 
 // TODO: Move this to the implementation file to hide it????
 //       This will stop us from exposing Vector to the user.
-typedef struct
+typedef struct ECS
 {
     // Entities
     int num_used_entities;
@@ -62,11 +62,10 @@ void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
 // TODO: Should these be named ECS_View??? Capitalised as type???
 ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude);
 ViewIter ECS_view_iter(const ECS* ecs, ViewID vid);
-int ECS_view_iter_next(const ECS* ecs, ViewIter* it);
+int ECS_view_iter_next(ViewIter* it);
 
 // TODO: These will be refactored to use iterators.
-void* ECS_get_component_list(ECS* ecs, ViewIter it, ComponentID cid);
-int ECS_archetype_num_entities(const ECS* ecs, ArchetypeID aid);
+void* ECS_get_component_list(ViewIter it, ComponentID cid);
 
 // Entity API
 // TODO: Create/destroy? 

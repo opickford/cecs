@@ -34,14 +34,11 @@ typedef struct
 
 static void test_func(ECS* ecs, ViewID view_id)
 {
-
-
     ViewIter it = ECS_view_iter(ecs, view_id);
-
-    while (ECS_view_iter_next(ecs, &it))
+    while (ECS_view_iter_next(&it))
     {
-        Position* positions = ECS_get_component_list(ecs, it, position_component);
-        Velocity* velocities = ECS_get_component_list(ecs, it, velocity_component);
+        Position* positions = ECS_get_component_list(it, position_component);
+        Velocity* velocities = ECS_get_component_list(it, velocity_component);
 
         for (int i = 0; i < it.count; ++i)
         {

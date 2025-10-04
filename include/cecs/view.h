@@ -27,8 +27,12 @@ typedef struct
 
 // TODO: Needs refactor.
 // TODO: Can contain pointer to ecs.
+
+typedef struct ECS ECS;
 typedef struct
 {
+    ECS* ecs;
+
     ViewID vid;
 
     int current;
