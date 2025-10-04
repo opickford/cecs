@@ -31,7 +31,7 @@ typedef struct
 typedef struct ECS ECS;
 typedef struct
 {
-    ECS* ecs;
+    const ECS* ecs;
 
     ViewID vid;
 
@@ -40,7 +40,7 @@ typedef struct
 
     ArchetypeID* aid;
 
-    int count;
+    uint32_t count;
 
 } ViewIter;
 

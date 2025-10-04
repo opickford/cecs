@@ -48,7 +48,7 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
     // Store the size of the component for resizing archetype arrays.
     ComponentInfo ci = {
         .size = component_size,
-        .id = Vector_size(ecs->component_infos)
+        .id = (ComponentID)Vector_size(ecs->component_infos)
     };
     Vector_push_back(ecs->component_infos, ci);
 
@@ -58,7 +58,7 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
 ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
 {
     // TODO: Handle if include/exclude have matching bits! Invalid!
-    ViewID num_views = Vector_size(ecs->views);
+    ViewID num_views = (ViewID)Vector_size(ecs->views);
 
     // Look for existing view.
     // TODO: Map would be nicer.
@@ -80,7 +80,7 @@ ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
     View* v = &ecs->views[num_views];
 
     // Load matching archetypes into ecs.
-    int num_archetypes = Vector_size(ecs->archetypes);
+    size_t num_archetypes = Vector_size(ecs->archetypes);
     for (int aid = 0; aid < num_archetypes; ++aid)
     {
         const ComponentsBitset bits = ecs->archetypes[aid].signature.bitset;
@@ -102,15 +102,15 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
 {
     View* view = &ecs->views[vid];
 
-    int num_entities = Vector_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
+    size_t num_entities = Vector_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
 
     ViewIter it = {
         .ecs = ecs,
         .vid = vid,
         .current = 0,
-        .end = Vector_size(view->archetype_ids),
+        .end = (int)Vector_size(view->archetype_ids),
         .aid = view->archetype_ids,
-        .count = num_entities
+        .count = (int)num_entities
     };
     return it;
 }
@@ -124,7 +124,7 @@ int ECS_view_iter_next(ViewIter* it)
 
 
     ++it->aid;
-    it->count = Vector_size(it->ecs->archetypes[*(it->aid - 1)].index_to_entity);
+    it->count = (uint32_t)Vector_size(it->ecs->archetypes[*(it->aid - 1)].index_to_entity);
 
     return 1;
 }
@@ -220,7 +220,7 @@ void ECS_destroy_entity(ECS* ecs, EntityID id)
     // Remove entity from it's archetype, which should remove it's components,
     // note, sadly we have to search for the archetype. Could use a map from
     // entity id to archetype id (index). TODO: consider.
-    int num_archetypes = Vector_size(ecs->archetypes);
+    size_t num_archetypes = Vector_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
         Archetype* archetype = &ecs->archetypes[i];
@@ -256,7 +256,7 @@ void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
     // Must use ArchetypeID as if we create a new archetype we will invalidate the pointers.
     ArchetypeID new_archetype_id = INVALID_ARCHETYPE;
     ArchetypeID old_archetype_id = INVALID_ARCHETYPE;
-    const int num_archetypes = Vector_size(ecs->archetypes);
+    const size_t num_archetypes = Vector_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
         if (ecs->archetypes[i].signature.bitset == old_components_bitset)
@@ -305,7 +305,7 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
     // Must use ArchetypeID as if we create a new archetype we will invalidate the pointers.
     ArchetypeID new_archetype_id = INVALID_ARCHETYPE;
     ArchetypeID old_archetype_id = INVALID_ARCHETYPE;
-    const int num_archetypes = Vector_size(ecs->archetypes);
+    const size_t num_archetypes = Vector_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
         if (ecs->archetypes[i].signature.bitset == old_components_bitset)
@@ -356,7 +356,7 @@ static ArchetypeID ECS_create_archetype(ECS* ecs,
 {
     // Currently we're allowing for an empty archetype to keep the logic simple,
     // so that every entity lives in an archetype. May change in the future.
-    ArchetypeID archetype_id = Vector_size(ecs->archetypes);
+    ArchetypeID archetype_id = (ArchetypeID)Vector_size(ecs->archetypes);
     Archetype new_archetype = {
         .signature = {
             .bitset = archetype_bitset
@@ -419,7 +419,7 @@ static ArchetypeID ECS_create_archetype(ECS* ecs,
     }
 
     // Add the archetype to all views that fit it's signature.
-    const int num_views = Vector_size(ecs->views);
+    const size_t num_views = Vector_size(ecs->views);
     for (int i = 0; i < num_views; ++i)
     {
         View* view = &ecs->views[i];
@@ -440,12 +440,13 @@ static void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_
     // Add the entity to the new archetype.
     Archetype* new_archetype = &ecs->archetypes[new_archetype_id];
     Archetype_add_entity(ecs, new_archetype, id);
+    // TODO: Confirm this succeeeded?
 
     // Copy where the entity used to live.
     const EntityIndex old_entity_index = ecs->entity_indices[id];
        
     // Get the index of the last entity in the archetype.
-    int component_list_index = Vector_size(new_archetype->index_to_entity) - 1;
+    int component_list_index = (int)Vector_size(new_archetype->index_to_entity) - 1;
 
     // Update information on where the entity is.
     ecs->entity_indices[id].archetype_id = new_archetype_id;
@@ -560,7 +561,7 @@ static void Archetype_remove_entity(ECS* ecs, Archetype* archetype,
     //       to do this? Removing won't really be what we want as that would
     //       shift everything rather than just quickly swapping.
 
-    int num_entities = Vector_size(archetype->index_to_entity);
+    int num_entities = (int)Vector_size(archetype->index_to_entity);
 
     // Archetype already empty, should not happen.
     if (num_entities == 0)
