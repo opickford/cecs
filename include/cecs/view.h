@@ -6,6 +6,7 @@
 // TODO: COmment not implementation but how the user should use it!!!!
 
 typedef uint8_t ViewID;
+#define INVALID_VIEW UINT8_MAX
 
 typedef struct View View;
 typedef struct ECS ECS;

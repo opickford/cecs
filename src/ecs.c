@@ -61,7 +61,13 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
 // TODO: Some function for passing in component ids separately to create bitsets.
 ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
 {
-    // TODO: Handle if include/exclude have matching bits! Invalid!
+    // TODO: Should write tests for this sort of thing!
+    // Include and exclude cannot have matching bits.
+    if ((include & exclude) != 0)
+    {
+        return INVALID_VIEW;
+    }
+
     ViewID num_views = (ViewID)Vector_size(ecs->views);
 
     // Look for existing view.
