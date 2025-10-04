@@ -34,13 +34,14 @@ typedef struct
 
 static void test_func(ECS* ecs, ViewID view_id)
 {
+    // TODO: I don't really like the name of these functions.
     ViewIter it = ECS_view_iter(ecs, view_id);
     while (ECS_view_iter_next(&it))
     {
         Position* positions = ECS_get_component_list(it, position_component);
         Velocity* velocities = ECS_get_component_list(it, velocity_component);
 
-        for (int i = 0; i < it.count; ++i)
+        for (uint32_t i = 0; i < it.count; ++i)
         {
             Position p = positions[i];
             Velocity v = velocities[i];
@@ -53,27 +54,6 @@ static void test_func(ECS* ecs, ViewID view_id)
     }
 }
 
-/*
-void log_archetypes(ECS* ecs)
-{
-    // TODO: It's not ideal exposing the vectors to the user.
-    const int num_archetypes = Vector_size(ecs->archetypes);
-    for (int i = 0; i < num_archetypes; ++i)
-    {
-        const Archetype* archetype = &ecs->archetypes[i];
-        printf("Archetype\n");
-        printf("bitset: %d\n" , archetype->signature.bitset);
-        printf("num_components %d\n", archetype->signature.num_components);
-
-        // TODO: Make some Archetype_num_entities func to hide the Vector?
-        int num_entities = Vector_size(archetype->index_to_entity);
-        printf("num_entites %d\n", num_entities);
-
-        printf("\n");
-    }
-    printf("-----------\n\n");
-}
-*/
 int main()
 {
     ECS ecs;
@@ -122,10 +102,9 @@ int main()
     e0_vel = ECS_add_component(&ecs, e0, velocity_component);
     *e0_vel = (Velocity){ 1,2,3 };
 
-
     ViewID test_view_id = ECS_view(&ecs,
         COMPONENT_ID_TO_BITSET(position_component) | COMPONENT_ID_TO_BITSET(velocity_component),
-        0
+        COMPONENT_ID_TO_BITSET(health_component)
     );
     test_func(&ecs, test_view_id);
     

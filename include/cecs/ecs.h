@@ -62,6 +62,9 @@ void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
 // TODO: Should these be named ECS_View??? Capitalised as type???
 ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude);
 ViewIter ECS_view_iter(const ECS* ecs, ViewID vid);
+
+// TODO: Rename ViewIter_next? Then it would be nice to go in view.h but can't
+//       really right?
 int ECS_view_iter_next(ViewIter* it);
 
 // TODO: These will be refactored to use iterators.

@@ -34,8 +34,12 @@ typedef uint8_t ComponentID; // TODO: Rename ids like ComponentId?
 #define COMPONENT_BITSET_SIZE 16 // TODO: Rename to MAX COMPONENTS?
 #define COMPONENTS_EMPTY_BITSET 0
 
-// TODO: Should this be cast to something
+// TODO: Should this be cast to something?
 #define COMPONENT_ID_TO_BITSET(id) (1 << id)
+
+
+
+
 
 // TODO: Document.......... why all this......
 
