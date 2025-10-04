@@ -37,7 +37,7 @@ static void test_func(ECS* ecs, ViewID view_id)
         Position* positions = ECS_get_component_list(it, position_component);
         Velocity* velocities = ECS_get_component_list(it, velocity_component);
 
-        for (uint32_t i = 0; i < it.count; ++i)
+        for (uint32_t i = 0; i < it.num_entities; ++i)
         {
             Position p = positions[i];
             Velocity v = velocities[i];
@@ -72,7 +72,6 @@ int main()
     e0_vel->vy = -1;
     e0_vel->vz = -1;
 
-    
     ECS_remove_component(ecs, e0, velocity_component);
     
     EntityID e1 = ECS_create_entity(ecs);

@@ -7,21 +7,16 @@
 #include "entity.h"
 #include "view.h"
 
-// TODO: Terminology should be refactored to use table like names: column, row, field etc.
+typedef struct ECS ECS;
+
+// TODO: Terminology should be refactored to use table like names: 
+//       column, row, field etc.
 
 // To ensure that all entities have an archetype, we must first 
 // create an empty archetype.
 #define EMPTY_ARCHETYPE_ID 0
 
-// TODO: Comments for public functions.
-
-typedef struct
-{
-    ArchetypeID archetype_id;
-    int component_list_index;
-} EntityIndex;
-
-typedef struct ECS ECS;
+// TODO: Comments for public usage.
 
 // ECS API
 ECS* ECS_create();
@@ -35,23 +30,16 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid);
 void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
 
 // View API
-
-// TODO: Should these be named ECS_View??? Capitalised as type???
 ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude);
 ViewIter ECS_view_iter(const ECS* ecs, ViewID vid);
 
 // TODO: Rename ViewIter_next? Then it would be nice to go in view.h but can't
 //       really right?
 int ECS_view_iter_next(ViewIter* it);
-
-// TODO: These will be refactored to use iterators.
 void* ECS_get_component_list(ViewIter it, ComponentID cid);
 
 // Entity API
-// TODO: Create/destroy? 
 EntityID ECS_create_entity(ECS* ecs);
 void ECS_destroy_entity(ECS* ecs, EntityID id);
-
-
 
 #endif

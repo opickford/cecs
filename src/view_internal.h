@@ -17,5 +17,6 @@ typedef struct View
 
 } View;
 
+void View_destroy(View* view);
 
 #endif

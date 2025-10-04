@@ -113,7 +113,7 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
         .current = 0,
         .end = (int)Vector_size(view->archetype_ids),
         .aid = view->archetype_ids,
-        .count = (int)num_entities
+        .num_entities = (int)num_entities
     };
     return it;
 }
@@ -127,7 +127,7 @@ int ECS_view_iter_next(ViewIter* it)
 
 
     ++it->aid;
-    it->count = (uint32_t)Vector_size(it->ecs->archetypes[*(it->aid - 1)].index_to_entity);
+    it->num_entities = (uint32_t)Vector_size(it->ecs->archetypes[*(it->aid - 1)].index_to_entity);
 
     return 1;
 }

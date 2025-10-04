@@ -5,6 +5,12 @@
 
 #include <chds/vector.h>
 
+typedef struct
+{
+    ArchetypeID archetype_id;
+    int component_list_index;
+} EntityIndex;
+
 typedef struct ECS
 {
     // Entities

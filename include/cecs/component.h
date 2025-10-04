@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+// TODO: What is private here and what isn't.
+
 /*
 
 TODO: Probably gotta rethink all of this at some point.

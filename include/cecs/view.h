@@ -13,8 +13,6 @@ typedef struct View View;
 typedef struct ECS ECS;
 
 // TODO: Needs refactor.
-// TODO: Can contain pointer to ecs.
-
 
 typedef struct
 {
@@ -27,11 +25,10 @@ typedef struct
 
     ArchetypeID* aid;
 
-    uint32_t count;
+    uint32_t num_entities;
 
 } ViewIter;
 
-// TODO: Private, user should not call this.
-void View_destroy(View* view);
+
 
 #endif
