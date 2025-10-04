@@ -1,70 +1,45 @@
 #ifndef ECS_H
 #define ECS_H
 
+// TODO: Forward declarations?
 #include "archetype.h"
 #include "component.h"
 #include "entity.h"
-#include "system.h"
+#include "view.h"
 
-// The empty archetype must be the first created.
+typedef struct ECS ECS;
+
+// TODO: Terminology should be refactored to use table like names: 
+//       column, row, field etc.
+
+// To ensure that all entities have an archetype, we must first 
+// create an empty archetype.
 #define EMPTY_ARCHETYPE_ID 0
 
-// TODO: Just redo everything really.
+// TODO: Comments for public usage.
 
-typedef struct
-{
-    ArchetypeID archetype_id;
-    int component_list_index;
-} EntityIndex;
+// ECS API
+ECS* ECS_create();
+// TODO: ECS_destroy(ECS* ecs);
 
-typedef struct
-{
-    // Entities
-    int num_used_entities;
-
-    EntityID* free_entities;
-    int free_entities_count;
-    int free_entities_capacity;
-
-    ComponentsBitset* entity_components_bitsets;
-
-    // Stores the archetype that the entity belongs to and the position in that
-    // archetype.
-    EntityIndex* entity_indices; 
-
-    // Components
-    int num_components;
-    ComponentInfo* component_infos;
-
-    // Archetypes
-    int num_archetypes;
-    Archetype* archetypes;
-
-    // Systems
-    int num_systems;
-    System* systems;
-
-} ECS;
-
-void ECS_init(ECS* ecs);
-
+// Component API
 ComponentID ECS_register_component(ECS* ecs, uint32_t component_size);
-SystemID ECS_register_system(ECS* ecs);
-
-// TODO: Create/destroy? 
-EntityID ECS_create_entity(ECS* ecs);
-void ECS_destroy_entity(ECS* ecs, EntityID id);
 
 void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid);
 void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid);
 void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
 
-// Internal helper functions.
-ArchetypeID ECS_create_archetype(ECS* ecs, ComponentsBitset archetype_bitset);
-void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id, 
-    ArchetypeID new_archetype_id);
+// View API
+ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude);
+ViewIter ECS_view_iter(const ECS* ecs, ViewID vid);
 
-void Archetype_add_entity(const ECS* ecs, Archetype* archetype, EntityID eid);
-void Archetype_remove_entity(const ECS* ecs, Archetype* archetype, int entity_index);
+// TODO: Rename ViewIter_next? Then it would be nice to go in view.h but can't
+//       really right?
+int ECS_view_iter_next(ViewIter* it);
+void* ECS_get_column(ViewIter it, ComponentID cid);
+
+// Entity API
+EntityID ECS_create_entity(ECS* ecs);
+void ECS_destroy_entity(ECS* ecs, EntityID id);
 
 #endif
