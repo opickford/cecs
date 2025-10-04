@@ -34,6 +34,8 @@ typedef struct
 
 static void test_func(ECS* ecs, ViewID view_id)
 {
+
+
     ViewIter it = ECS_view_iter(ecs, view_id);
 
     while (ECS_view_iter_next(ecs, &it))
@@ -87,10 +89,7 @@ int main()
 
     // Register a test view that uses both components.
     // TODO: Make nicer somehow idk?
-    ViewID test_view_id = ECS_view(&ecs,
-        COMPONENT_ID_TO_BITSET(position_component) | COMPONENT_ID_TO_BITSET(velocity_component),
-        0
-        );
+   
    
     int num_entities = 100000;
     
@@ -126,6 +125,11 @@ int main()
     e0_vel = ECS_add_component(&ecs, e0, velocity_component);
     *e0_vel = (Velocity){ 1,2,3 };
 
+
+    ViewID test_view_id = ECS_view(&ecs,
+        COMPONENT_ID_TO_BITSET(position_component) | COMPONENT_ID_TO_BITSET(velocity_component),
+        0
+    );
     test_func(&ecs, test_view_id);
     
 	return 0;

@@ -72,13 +72,12 @@ ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
         }
     }
 
-    View view =
-    {
-        .include = include,
-        .exclude = exclude
-    };
+    Vector_push_back(ecs->views, ((View) { 
+        .include = include, 
+        .exclude = exclude 
+    }));
 
-    Vector_push_back(ecs->views, view);
+    View* v = &ecs->views[num_views];
 
     // Load matching archetypes into ecs.
     int num_archetypes = Vector_size(ecs->archetypes);
@@ -92,7 +91,7 @@ ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
         if ((bits & include) == include &&
             (bits & exclude) == 0)
         {
-            Vector_push_back(view.archetype_ids, aid);
+            Vector_push_back(v->archetype_ids, aid);
         }
     }
 
