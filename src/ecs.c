@@ -110,8 +110,8 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
     ViewIter it = {
         .ecs = ecs,
         .vid = vid,
-        .current = 0,
-        .end = (int)Vector_size(view->archetype_ids),
+        .current = 0u,
+        .end = (uint32_t)Vector_size(view->archetype_ids),
         .aid = view->archetype_ids,
         .num_entities = (int)num_entities
     };

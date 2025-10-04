@@ -20,8 +20,8 @@ typedef struct
 
     ViewID vid;
 
-    int current;
-    int end;
+    uint32_t current;
+    uint32_t end;
 
     ArchetypeID* aid;
 
