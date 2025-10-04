@@ -112,13 +112,19 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
 {
     View* view = &ecs->views[vid];
 
-    size_t num_entities = Vector_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
+    uint32_t num_archetypes = (uint32_t)Vector_size(view->archetype_ids);
+
+    uint32_t num_entities = 0;
+    if (num_archetypes > 0)
+    {
+        num_entities = (uint32_t)Vector_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
+    }
 
     ViewIter it = {
         .ecs = ecs,
         .vid = vid,
         .current = 0u,
-        .end = (uint32_t)Vector_size(view->archetype_ids),
+        .end = num_archetypes,
         .aid = view->archetype_ids,
         .num_entities = (int)num_entities
     };
