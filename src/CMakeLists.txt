@@ -1,4 +1,4 @@
-﻿list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs/chds")
+﻿list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs")
 find_package(chds REQUIRED)
 
 add_library (cecs STATIC 
@@ -19,7 +19,6 @@ add_library (cecs STATIC
 
 add_library(cecs::cecs ALIAS cecs)
 
-# TODO: Should be private so we don't expose vector to user.
 target_link_libraries(cecs 
     PRIVATE
         chds::chds

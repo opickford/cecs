@@ -57,6 +57,12 @@ int main()
     position_component = ECS_register_component(ecs, sizeof(Position));
     velocity_component = ECS_register_component(ecs, sizeof(Velocity));
     health_component = ECS_register_component(ecs, sizeof(Health));
+    // Register a test view that uses position, velocity but excludes health.
+    ViewID test_view_id = ECS_view(ecs,
+        COMPONENT_ID_TO_BITSET(position_component) | COMPONENT_ID_TO_BITSET(velocity_component),
+        COMPONENT_ID_TO_BITSET(health_component)
+    );
+    test_func(ecs, test_view_id);
 
     // TODO: Document how component pointers are only valid until the 
     //       next component is added!! or like how it actually works....
@@ -88,12 +94,6 @@ int main()
     e0_vel = ECS_add_component(ecs, e0, velocity_component);
     *e0_vel = (Velocity){ 1,2,3 };
 
-    // Register a test view that uses position, velocity but excludes health.
-    ViewID test_view_id = ECS_view(ecs,
-        COMPONENT_ID_TO_BITSET(position_component) | COMPONENT_ID_TO_BITSET(velocity_component),
-        COMPONENT_ID_TO_BITSET(health_component)
-    );
-    test_func(ecs, test_view_id);
     
 	return 0;
 }

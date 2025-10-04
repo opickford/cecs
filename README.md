@@ -9,6 +9,7 @@ An Entity Component System in C, specifically designed for my game/game engine h
 
 ## Installing
 - [ ] TODO
+- [ ] TODO: How should libs be installed? Surely we should create the libs folder in place???
 
 How to install:
 cmake -S . -B build -DCMAKE_INSTALL_PREFIX=install

@@ -1,5 +1,6 @@
 # Export targets
-install(TARGETS cecs EXPORT cecsTargets
+install(TARGETS cecs 
+    EXPORT cecsTargets
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
