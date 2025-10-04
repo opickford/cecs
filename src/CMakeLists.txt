@@ -1,15 +1,29 @@
-﻿add_library (cecs STATIC 
-	"ecs.c" 
+﻿list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs/chds")
+find_package(chds REQUIRED)
+
+add_library (cecs STATIC 
+	"ecs_internal.h"
+	"ecs.c"
+	"archetype_internal.h"
+	"archetype.c"
+	"view_internal.h"
+	"view.c"
 
 	# Headers for Visual Studio
 	"../include/cecs/archetype.h"
 	"../include/cecs/component.h"
 	"../include/cecs/ecs.h"
 	"../include/cecs/entity.h"
-	"../include/cecs/system.h"
+	"../include/cecs/view.h"
 )
 
 add_library(cecs::cecs ALIAS cecs)
+
+# TODO: Should be private so we don't expose vector to user.
+target_link_libraries(cecs 
+    PRIVATE
+        chds::chds
+)
 
 target_include_directories(cecs 
 	PUBLIC
@@ -24,3 +38,4 @@ target_include_directories(cecs
 set_target_properties(cecs PROPERTIES
     DEBUG_POSTFIX d
 )
+
