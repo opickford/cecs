@@ -3,7 +3,7 @@
 project (cecs VERSION 1.0.0 LANGUAGES C)
 
 option(CECS_BUILD_EXAMPLES "Build examples" ON)
-#option(CECS_BUILD_TESTS "Build tests" OFF) # TODO: Tests.
+option(CECS_BUILD_TESTS "Build tests" ON)
 option(CECS_INSTALL "Enable installation" ON)
 
 # Set output directories for all targets, makes it a bit neater.
@@ -18,10 +18,9 @@ if (CECS_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-# TODO:
-#if (CECS_BUILD_TEST)
-    #add_subdirectory(tests)
-#endif()
+if (CECS_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
 
 # Optional install support
 if(CECS_INSTALL)
