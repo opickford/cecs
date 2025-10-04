@@ -7,8 +7,6 @@
 #include "entity.h"
 #include "view.h"
 
-#include <chds/vector.h>
-
 // TODO: Terminology should be refactored to use table like names: column, row, field etc.
 
 // To ensure that all entities have an archetype, we must first 
@@ -23,31 +21,10 @@ typedef struct
     int component_list_index;
 } EntityIndex;
 
-// TODO: Move this to the implementation file to hide it????
-//       This will stop us from exposing Vector to the user.
-typedef struct ECS
-{
-    // Entities
-    int num_used_entities;
-
-    EntityID* free_entities;
-    int free_entities_count;
-    int free_entities_capacity;
-
-    ComponentsBitset* entity_components_bitsets;
-
-    // Stores the archetype that the entity belongs to and the position in that
-    // archetype.
-    EntityIndex* entity_indices; 
-
-    Vector(ComponentInfo) component_infos;
-    Vector(Archetype) archetypes;
-    Vector(View) views;
-
-} ECS;
+typedef struct ECS ECS;
 
 // ECS API
-void ECS_init(ECS* ecs);
+ECS* ECS_create();
 // TODO: ECS_destroy(ECS* ecs);
 
 // Component API

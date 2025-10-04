@@ -2,9 +2,12 @@
 find_package(chds REQUIRED)
 
 add_library (cecs STATIC 
-	"ecs.c" 
-	"archetype.c"
+	"ecs_internal.h"
+	"ecs.c"
 	"archetype_internal.h"
+	"archetype.c"
+	"view_internal.h"
+	"view.c"
 
 	# Headers for Visual Studio
 	"../include/cecs/archetype.h"
@@ -18,7 +21,7 @@ add_library(cecs::cecs ALIAS cecs)
 
 # TODO: Should be private so we don't expose vector to user.
 target_link_libraries(cecs 
-    PUBLIC
+    PRIVATE
         chds::chds
 )
 

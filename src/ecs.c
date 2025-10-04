@@ -1,6 +1,7 @@
-#include "ecs.h"
+#include "ecs_internal.h"
 
 #include "archetype_internal.h"
+#include "view_internal.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -24,10 +25,10 @@ static void Archetype_remove_entity(ECS* ecs,
     int entity_index);
 
 // ECS API
-void ECS_init(ECS* ecs)
+ECS* ECS_create()
 {
-    memset(ecs, 0, sizeof(ECS));
-
+    ECS* ecs = calloc(1, sizeof(ECS));
+    
     // Ensure an empty archetype exists to store entities without components.
     // NOTE: This logic may be refactored in the future so that there is no 
     //       need for this empty archetype! The issue being removing an entity's
@@ -41,6 +42,8 @@ void ECS_init(ECS* ecs)
         // TODO: Handle error!
         assert(0);
     }
+
+    return ecs;
 }
 
 ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
