@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 
-project (cecs VERSION 0.0.1 LANGUAGES C)
+project (cecs VERSION 1.0.0 LANGUAGES C)
 
 option(CECS_BUILD_EXAMPLES "Build examples" ON)
 #option(CECS_BUILD_TESTS "Build tests" OFF) # TODO: Tests.
