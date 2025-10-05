@@ -123,8 +123,8 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
     ViewIter it = {
         .ecs = ecs,
         .vid = vid,
-        .aid = view->archetype_ids - 1,
-        .rem = num_archetypes,
+        .aid = view->archetype_ids - 1, // Offset by 1 because of initial increment.
+        .rem = num_archetypes + 1, // Offset by 1 because of initial decrement.
         .num_entities = num_entities
     };
     return it;
@@ -132,8 +132,8 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
 
 int ECS_view_iter_next(ViewIter* it)
 {
-    if (it->rem == 0) return 0;
     --it->rem;
+    if (it->rem == 0) return 0;
 
     // Move to next archetype.
     ++it->aid;
