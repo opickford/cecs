@@ -16,10 +16,9 @@ typedef struct
     const ECS* ecs;
     ViewID vid;
 
-    uint32_t current;
-    uint32_t end;
-
     ArchetypeID* aid;      // Current archetype.
+    uint32_t rem;          // Remaining elements to iterate through.
+
     uint32_t num_entities; // Current number of entities in archetype.
 
 } ViewIter;

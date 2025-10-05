@@ -123,32 +123,29 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
     ViewIter it = {
         .ecs = ecs,
         .vid = vid,
-        .current = 0u,
-        .end = num_archetypes,
-        .aid = view->archetype_ids,
-        .num_entities = (int)num_entities
+        .aid = view->archetype_ids - 1,
+        .rem = num_archetypes,
+        .num_entities = num_entities
     };
     return it;
 }
 
 int ECS_view_iter_next(ViewIter* it)
 {
-    if (it->current == it->end) return 0;
+    if (it->rem == 0) return 0;
+    --it->rem;
 
-    // TODO: Current is misleading as this pushes us past current?
-    ++it->current;
-
-    // Move to the next archetype.
+    // Move to next archetype.
     ++it->aid;
 
-    it->num_entities = (uint32_t)Vector_size(it->ecs->archetypes[*(it->aid - 1)].index_to_entity);
+    it->num_entities = (uint32_t)Vector_size(it->ecs->archetypes[*it->aid].index_to_entity);
 
     return 1;
 }
 
 void* ECS_get_column(ViewIter it, ComponentID cid)
 {
-    return Archetype_get_column(&it.ecs->archetypes[*(it.aid - 1)], cid);
+    return Archetype_get_column(&it.ecs->archetypes[*it.aid], cid);
 }
 
 EntityID ECS_create_entity(ECS* ecs)
