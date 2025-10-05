@@ -113,18 +113,22 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
     View* view = &ecs->views[vid];
 
     uint32_t num_archetypes = (uint32_t)Vector_size(view->archetype_ids);
-
     uint32_t num_entities = 0;
+
+    // Avoid ptr arithmetic on nullptr.
+    ArchetypeID* start = 0;
+
     if (num_archetypes > 0)
     {
+        start = view->archetype_ids - 1; // Offset by 1 because of initial increment.
         num_entities = (uint32_t)Vector_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
     }
 
     ViewIter it = {
         .ecs = ecs,
         .vid = vid,
-        .aid = view->archetype_ids - 1, // Offset by 1 because of initial increment.
-        .rem = num_archetypes + 1, // Offset by 1 because of initial decrement.
+        .aid = start,
+        .rem = num_archetypes,
         .num_entities = num_entities
     };
     return it;
@@ -132,8 +136,8 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
 
 int ECS_view_iter_next(ViewIter* it)
 {
-    --it->rem;
     if (it->rem == 0) return 0;
+    --it->rem;
 
     // Move to next archetype.
     ++it->aid;
