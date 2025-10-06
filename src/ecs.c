@@ -597,7 +597,7 @@ static void Archetype_remove_entity(ECS* ecs, Archetype* archetype,
     {
         // TODO: vector_pop_back functionality?
         CHDS_VectorHeader* h = CHDS_Vector_header(archetype->index_to_entity);
-        --h->count;
+        --h->size;
         
         return;
     }
@@ -634,6 +634,6 @@ static void Archetype_remove_entity(ECS* ecs, Archetype* archetype,
     // 'Remove' the last entity.
     // TODO: vector_pop_back functionality?
     CHDS_VectorHeader* h = CHDS_Vector_header(archetype->index_to_entity);
-    --h->count;
+    --h->size;
 }
 

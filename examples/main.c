@@ -57,6 +57,7 @@ int main()
     position_component = ECS_register_component(ecs, sizeof(Position));
     velocity_component = ECS_register_component(ecs, sizeof(Velocity));
     health_component = ECS_register_component(ecs, sizeof(Health));
+
     // Register a test view that uses position, velocity but excludes health.
     ViewID test_view_id = ECS_view(ecs,
         COMPONENT_ID_TO_BITSET(position_component) | COMPONENT_ID_TO_BITSET(velocity_component),
