@@ -1,5 +1,5 @@
-#ifndef ECS_H
-#define ECS_H
+#ifndef CECS_H
+#define CECS_H
 
 // TODO: Forward declarations?
 #include "archetype.h"
@@ -7,7 +7,7 @@
 #include "entity.h"
 #include "view.h"
 
-typedef struct ECS ECS;
+typedef struct cecs_t cecs_t;
 
 // TODO: Terminology should be refactored to use table like names: 
 //       column, row, field etc.
@@ -18,28 +18,28 @@ typedef struct ECS ECS;
 
 // TODO: Comments for public usage.
 
-// ECS API
-ECS* ECS_create();
-// TODO: ECS_destroy(ECS* ecs);
+// cecs_t API
+cecs_t* cecs_create();
+// TODO: cecs_destroy(cecs_t* ecs);
 
 // Component API
-ComponentID ECS_register_component(ECS* ecs, uint32_t component_size);
+cecs_component_id_t cecs_regsiter_component(cecs_t* ecs, uint32_t component_size);
 
-void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid);
-void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid);
-void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid);
+void* cecs_add_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid);
+void cecs_remove_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid);
+void* cecs_get_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid);
 
-// View API
-ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude);
-ViewIter ECS_view_iter(const ECS* ecs, ViewID vid);
+// cecs_view_t API
+cecs_view_id_t cecs_view(cecs_t* ecs, cecs_components_bitset_t include, cecs_components_bitset_t exclude);
+cecs_view_iter_t cecs_view_iter(const cecs_t* ecs, cecs_view_id_t vid);
 
-// TODO: Rename ViewIter_next? Then it would be nice to go in view.h but can't
+// TODO: Rename cecs_view_tIter_next? Then it would be nice to go in view.h but can't
 //       really right?
-int ECS_view_iter_next(ViewIter* it);
-void* ECS_get_column(ViewIter it, ComponentID cid);
+int cecs_view_iter_next(cecs_view_iter_t* it);
+void* cecs_get_column(cecs_view_iter_t it, cecs_component_id_t cid);
 
 // Entity API
-EntityID ECS_create_entity(ECS* ecs);
-void ECS_destroy_entity(ECS* ecs, EntityID id);
+cecs_entity_id_t cecs_create_entity(cecs_t* ecs);
+void cecs_destroy_entity(cecs_t* ecs, cecs_entity_id_t id);
 
 #endif
