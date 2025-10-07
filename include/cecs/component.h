@@ -58,8 +58,8 @@ typedef struct
 {
     ComponentsBitset bitset;
 
-    // TODO: Vector?
-    // TODO: If we use a vector then some sort of shrink to fit function
+    // TODO: chds_vec?
+    // TODO: If we use a chds_vec then some sort of shrink to fit function
     //       could be nice, unless we can reserve before??
     int num_components;
     ComponentInfo* infos;

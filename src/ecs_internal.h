@@ -3,7 +3,7 @@
 
 #include "ecs.h"
 
-#include <chds/vector.h>
+#include <chds/vec.h>
 
 typedef struct
 {
@@ -26,9 +26,9 @@ typedef struct ECS
     // archetype.
     EntityIndex* entity_indices;
 
-    Vector(ComponentInfo) component_infos;
-    Vector(Archetype) archetypes;
-    Vector(View) views;
+    chds_vec(ComponentInfo) component_infos;
+    chds_vec(Archetype) archetypes;
+    chds_vec(View) views;
 
 } ECS;
 

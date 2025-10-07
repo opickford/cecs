@@ -6,7 +6,7 @@
 #include "entity.h"
 #include "component.h"
 
-#include <chds/vector.h>
+#include <chds/vec.h>
 
 // Stores columns for entities matching a signature.
 typedef struct Archetype
@@ -14,7 +14,7 @@ typedef struct Archetype
     ComponentsSignature signature;
 
     // TODO: Some sort of map?
-    Vector(EntityID) index_to_entity;
+    chds_vec(EntityID) index_to_entity;
 
     void** columns;
 
