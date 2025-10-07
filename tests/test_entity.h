@@ -7,7 +7,7 @@
 
 inline void test_create()
 {
-    cecs_t* ecs = cesc_create();
+    cecs_t* ecs = cecs_create();
     cecs_entity_id_t e = cecs_create_entity(ecs);
 
     assert(e != INVALID_ENTITY);

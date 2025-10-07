@@ -25,7 +25,7 @@ static void cecs_archetype_remove_entity(cecs_t* ecs,
     int entity_index);
 
 // cecs_t API
-cecs_t* cesc_create()
+cecs_t* cecs_create()
 {
     cecs_t* ecs = calloc(1, sizeof(cecs_t));
     

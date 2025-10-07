@@ -51,7 +51,7 @@ static void test_func(cecs_t* ecs, cecs_view_id_t view_id)
 
 int main()
 {
-    cecs_t* ecs = cesc_create();
+    cecs_t* ecs = cecs_create();
     
     position_component = cecs_regsiter_component(ecs, sizeof(Position));
     velocity_component = cecs_regsiter_component(ecs, sizeof(Velocity));

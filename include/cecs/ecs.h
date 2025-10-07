@@ -19,7 +19,7 @@ typedef struct cecs_t cecs_t;
 // TODO: Comments for public usage.
 
 // cecs_t API
-cecs_t* cesc_create();
+cecs_t* cecs_create();
 // TODO: cecs_destroy(cecs_t* ecs);
 
 // Component API
