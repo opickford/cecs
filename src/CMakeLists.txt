@@ -8,6 +8,7 @@ add_library (cecs STATIC
 	"archetype.c"
 	"view_internal.h"
 	"view.c"
+	"component_internal.h"
 
 	# Headers for Visual Studio
 	"../include/cecs/archetype.h"

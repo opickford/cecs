@@ -4,7 +4,7 @@
 #include "archetype.h"
 
 #include "entity.h"
-#include "component.h"
+#include "component_internal.h"
 
 #include <chds/vec.h>
 

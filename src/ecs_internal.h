@@ -3,6 +3,8 @@
 
 #include "ecs.h"
 
+#include "component_internal.h"
+
 #include <chds/vec.h>
 
 typedef struct
