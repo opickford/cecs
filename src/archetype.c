@@ -16,7 +16,7 @@ void Archetype_destroy(Archetype* archetype)
         free(archetype->columns[i]);
     }
 
-    Vector_destroy(archetype->index_to_entity);
+    chds_vec_destroy(archetype->index_to_entity);
 
     archetype = 0;
 }

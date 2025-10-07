@@ -5,11 +5,11 @@
 
 #include "component.h"
 
-#include <chds/vector.h>
+#include <chds/vec.h>
 
 typedef struct View
 {
-    Vector(ArchetypeID) archetype_ids;
+    chds_vec(ArchetypeID) archetype_ids;
 
     // TODO: Document
     ComponentsBitset include;
