@@ -8,33 +8,33 @@
 #include <stdio.h>
 #include <assert.h>
 
-static ArchetypeID ECS_create_archetype(ECS* ecs, 
-    ComponentsBitset archetype_bitset);
+static cecs_archetype_id_t cecs_create_archetype(cecs_t* ecs, 
+    cecs_components_bitset_t archetype_bitset);
 
-static void ECS_move_archetype(ECS* ecs, 
-    EntityID id, 
-    ArchetypeID old_archetype_id,
-    ArchetypeID new_archetype_id);
+static void cecs_move_archetype(cecs_t* ecs, 
+    cecs_entity_id_t id, 
+    cecs_archetype_id_t old_archetype_id,
+    cecs_archetype_id_t new_archetype_id);
 
-static void Archetype_add_entity(const ECS* ecs, 
-    Archetype* archetype,
-    EntityID eid);
+static void cecs_archetype_add_entity(const cecs_t* ecs, 
+    cecs_archetype_t* archetype,
+    cecs_entity_id_t eid);
 
-static void Archetype_remove_entity(ECS* ecs, 
-    Archetype* archetype,
+static void cecs_archetype_remove_entity(cecs_t* ecs, 
+    cecs_archetype_t* archetype,
     int entity_index);
 
-// ECS API
-ECS* ECS_create()
+// cecs_t API
+cecs_t* cesc_create()
 {
-    ECS* ecs = calloc(1, sizeof(ECS));
+    cecs_t* ecs = calloc(1, sizeof(cecs_t));
     
     // Ensure an empty archetype exists to store entities without components.
     // NOTE: This logic may be refactored in the future so that there is no 
     //       need for this empty archetype! The issue being removing an entity's
     //       last component. Also, keeping this simplifies other logic as it means
     //       an entity always has an archetype!
-    ArchetypeID empty_archetype = ECS_create_archetype(ecs, 0);
+    cecs_archetype_id_t empty_archetype = cecs_create_archetype(ecs, 0);
 
     // Ensure the archetype is valid and matches the hardcoded index.
     if (empty_archetype == INVALID_ARCHETYPE || empty_archetype != EMPTY_ARCHETYPE_ID)
@@ -46,12 +46,12 @@ ECS* ECS_create()
     return ecs;
 }
 
-ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
+cecs_component_id_t cecs_regsiter_component(cecs_t* ecs, uint32_t component_size)
 {
     // Store the size of the component for resizing archetype arrays.
-    ComponentInfo ci = {
+    cecs_component_info_t ci = {
         .size = component_size,
-        .id = (ComponentID)chds_vec_size(ecs->component_infos)
+        .id = (cecs_component_id_t)chds_vec_size(ecs->component_infos)
     };
     chds_vec_push_back(ecs->component_infos, ci);
 
@@ -59,7 +59,7 @@ ComponentID ECS_register_component(ECS* ecs, uint32_t component_size)
 }
 
 // TODO: Some function for passing in component ids separately to create bitsets.
-ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
+cecs_view_id_t cecs_view(cecs_t* ecs, cecs_components_bitset_t include, cecs_components_bitset_t exclude)
 {
     // TODO: Should write tests for this sort of thing!
     // Include and exclude cannot have matching bits.
@@ -68,13 +68,13 @@ ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
         return INVALID_VIEW;
     }
 
-    ViewID num_views = (ViewID)chds_vec_size(ecs->views);
+    cecs_view_id_t num_views = (cecs_view_id_t)chds_vec_size(ecs->views);
 
     // Look for existing view.
     // TODO: Map would be nicer.
     for (int i = 0; i < num_views; ++i)
     {
-        View* v = &ecs->views[i];
+        cecs_view_t* v = &ecs->views[i];
         if (v->include == include &&
             v->exclude == exclude)
         {
@@ -82,21 +82,21 @@ ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
         }
     }
 
-    chds_vec_push_back(ecs->views, ((View) { 
+    chds_vec_push_back(ecs->views, ((cecs_view_t) { 
         .include = include, 
         .exclude = exclude 
     }));
 
-    View* v = &ecs->views[num_views];
+    cecs_view_t* v = &ecs->views[num_views];
 
     // Load matching archetypes into ecs.
     size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int aid = 0; aid < num_archetypes; ++aid)
     {
-        const ComponentsBitset bits = ecs->archetypes[aid].signature.bitset;
+        const cecs_components_bitset_t bits = ecs->archetypes[aid].signature.bitset;
         
         // TODO: Some helper function for this?
-        // Archetype bitset must have at least the include bits but
+        // cecs_archetype_t bitset must have at least the include bits but
         // none of the exclude ones.
         if ((bits & include) == include &&
             (bits & exclude) == 0)
@@ -108,15 +108,15 @@ ViewID ECS_view(ECS* ecs, ComponentsBitset include, ComponentsBitset exclude)
     return num_views;
 }
 
-ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
+cecs_view_iter_t cecs_view_iter(const cecs_t* ecs, const cecs_view_id_t vid)
 {
-    View* view = &ecs->views[vid];
+    cecs_view_t* view = &ecs->views[vid];
 
     uint32_t num_archetypes = (uint32_t)chds_vec_size(view->archetype_ids);
     uint32_t num_entities = 0;
 
     // Avoid ptr arithmetic on nullptr.
-    ArchetypeID* start = 0;
+    cecs_archetype_id_t* start = 0;
 
     if (num_archetypes > 0)
     {
@@ -124,7 +124,7 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
         num_entities = (uint32_t)chds_vec_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
     }
 
-    ViewIter it = {
+    cecs_view_iter_t it = {
         .ecs = ecs,
         .vid = vid,
         .aid = start,
@@ -134,7 +134,7 @@ ViewIter ECS_view_iter(const ECS* ecs, const ViewID vid)
     return it;
 }
 
-int ECS_view_iter_next(ViewIter* it)
+int cecs_view_iter_next(cecs_view_iter_t* it)
 {
     if (it->rem == 0) return 0;
     --it->rem;
@@ -147,14 +147,14 @@ int ECS_view_iter_next(ViewIter* it)
     return 1;
 }
 
-void* ECS_get_column(ViewIter it, ComponentID cid)
+void* cecs_get_column(cecs_view_iter_t it, cecs_component_id_t cid)
 {
-    return Archetype_get_column(&it.ecs->archetypes[*it.aid], cid);
+    return cecs_archetype_get_column(&it.ecs->archetypes[*it.aid], cid);
 }
 
-EntityID ECS_create_entity(ECS* ecs)
+cecs_entity_id_t cecs_create_entity(cecs_t* ecs)
 {
-    EntityID entity;
+    cecs_entity_id_t entity;
 
     ++ecs->num_used_entities;
 
@@ -172,8 +172,8 @@ EntityID ECS_create_entity(ECS* ecs)
 
         // TODO: Grow by some factor to save allocations?
         // TODO: Really need to do this!
-        ComponentsBitset* temp_bitsets = realloc(ecs->entity_components_bitsets,
-            total_created_entities * sizeof(ComponentsBitset));
+        cecs_components_bitset_t* temp_bitsets = realloc(ecs->entity_components_bitsets,
+            total_created_entities * sizeof(cecs_components_bitset_t));
 
         if (!temp_bitsets)
         {
@@ -182,8 +182,8 @@ EntityID ECS_create_entity(ECS* ecs)
         }
         ecs->entity_components_bitsets = temp_bitsets;
 
-        EntityIndex* temp_indices = realloc(ecs->entity_indices, 
-            total_created_entities * sizeof(EntityIndex));
+        cecs_entity_index_t* temp_indices = realloc(ecs->entity_indices, 
+            total_created_entities * sizeof(cecs_entity_index_t));
         if (!temp_indices)
         {
             printf("Failed to alloc for ecs->entity_indices.\n");
@@ -195,26 +195,26 @@ EntityID ECS_create_entity(ECS* ecs)
     }
     
     // Initialise entity data.
-    ecs->entity_components_bitsets[entity] = COMPONENTS_EMPTY_BITSET;
+    ecs->entity_components_bitsets[entity] = CECS_EMPTY_COMPONENTS_BITSET;
     ecs->entity_indices[entity].archetype_id = -1;
     ecs->entity_indices[entity].column = -1;
 
     // Move the entity to the empty archetype.
-    ECS_move_archetype(ecs, entity, INVALID_ARCHETYPE, EMPTY_ARCHETYPE_ID);
+    cecs_move_archetype(ecs, entity, INVALID_ARCHETYPE, EMPTY_ARCHETYPE_ID);
     
     return entity;
 }
 
 // TODO: Rename destroy?
-void ECS_destroy_entity(ECS* ecs, EntityID id)
+void cecs_destroy_entity(cecs_t* ecs, cecs_entity_id_t id)
 {
     --ecs->num_used_entities;
 
     // Entities don't need to be packed as we will never be iterating over the entities loop.
 
     // Clear entity signature.
-    const ComponentsBitset old_bitset = ecs->entity_components_bitsets[id];
-    ecs->entity_components_bitsets[id] = COMPONENTS_EMPTY_BITSET;
+    const cecs_components_bitset_t old_bitset = ecs->entity_components_bitsets[id];
+    ecs->entity_components_bitsets[id] = CECS_EMPTY_COMPONENTS_BITSET;
 
     // Grow capacity if needed.
     if (ecs->free_entities_count == ecs->free_entities_capacity)
@@ -222,7 +222,7 @@ void ECS_destroy_entity(ECS* ecs, EntityID id)
         // TODO: Grow by factor?
         ++ecs->free_entities_capacity;
 
-        EntityID* temp_free_entities = realloc(ecs->free_entities, ecs->free_entities_capacity * sizeof(EntityID));
+        cecs_entity_id_t* temp_free_entities = realloc(ecs->free_entities, ecs->free_entities_capacity * sizeof(cecs_entity_id_t));
         if (!temp_free_entities)
         {
             printf("failed to grow ecs->free_entities\n");
@@ -241,24 +241,24 @@ void ECS_destroy_entity(ECS* ecs, EntityID id)
     size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
-        Archetype* archetype = &ecs->archetypes[i];
+        cecs_archetype_t* archetype = &ecs->archetypes[i];
         if (archetype->signature.bitset == old_bitset)
         {
-            Archetype_remove_entity(ecs, archetype, ecs->entity_indices[id].column);
+            cecs_archetype_remove_entity(ecs, archetype, ecs->entity_indices[id].column);
             break;
         }
     }
 }
 
-void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
+void* cecs_add_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid)
 {
-    const ComponentsBitset old_components_bitset = ecs->entity_components_bitsets[eid];
-    const ComponentID component_bitset = COMPONENT_ID_TO_BITSET(cid);
+    const cecs_components_bitset_t old_components_bitset = ecs->entity_components_bitsets[eid];
+    const cecs_component_id_t component_bitset = CECS_COMPONENT_ID_TO_BITSET(cid);
 
     // Entity already has component, return that component instead.
     if (old_components_bitset & component_bitset)
     {
-        return ECS_get_component(ecs, eid, cid);
+        return cecs_get_component(ecs, eid, cid);
     }
  
     // Update entity's signature with the new component.
@@ -271,9 +271,9 @@ void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
     // TODO: Is there a nicer way to do this using some sort of mapping, brute 
     //       force search not ideal but shouldn't be a big issue for now.
 
-    // Must use ArchetypeID as if we create a new archetype we will invalidate the pointers.
-    ArchetypeID new_archetype_id = INVALID_ARCHETYPE;
-    ArchetypeID old_archetype_id = INVALID_ARCHETYPE;
+    // Must use cecs_archetype_id_t as if we create a new archetype we will invalidate the pointers.
+    cecs_archetype_id_t new_archetype_id = INVALID_ARCHETYPE;
+    cecs_archetype_id_t old_archetype_id = INVALID_ARCHETYPE;
     const size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
@@ -290,19 +290,19 @@ void* ECS_add_component(ECS* ecs, EntityID eid, ComponentID cid)
     // Create new archetype to match entity signature.
     if (new_archetype_id == INVALID_ARCHETYPE)
     {
-        new_archetype_id = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
+        new_archetype_id = cecs_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
     }
 
-    ECS_move_archetype(ecs, eid, old_archetype_id, new_archetype_id);
+    cecs_move_archetype(ecs, eid, old_archetype_id, new_archetype_id);
 
     // Return pointer to new component.
-    return ECS_get_component(ecs, eid, cid);
+    return cecs_get_component(ecs, eid, cid);
 }
 
-void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
+void cecs_remove_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid)
 {
-    const ComponentsBitset old_components_bitset = ecs->entity_components_bitsets[eid];
-    const ComponentID component_bitset = COMPONENT_ID_TO_BITSET(cid);
+    const cecs_components_bitset_t old_components_bitset = ecs->entity_components_bitsets[eid];
+    const cecs_component_id_t component_bitset = CECS_COMPONENT_ID_TO_BITSET(cid);
 
     // Entity doesn't have the component.
     if (!(old_components_bitset & component_bitset))
@@ -320,9 +320,9 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
     // TODO: Is there a nicer way to do this using some sort of mapping, brute 
     //       force search not ideal but shouldn't be a big issue for now.
 
-    // Must use ArchetypeID as if we create a new archetype we will invalidate the pointers.
-    ArchetypeID new_archetype_id = INVALID_ARCHETYPE;
-    ArchetypeID old_archetype_id = INVALID_ARCHETYPE;
+    // Must use cecs_archetype_id_t as if we create a new archetype we will invalidate the pointers.
+    cecs_archetype_id_t new_archetype_id = INVALID_ARCHETYPE;
+    cecs_archetype_id_t old_archetype_id = INVALID_ARCHETYPE;
     const size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
@@ -341,21 +341,21 @@ void ECS_remove_component(ECS* ecs, EntityID eid, ComponentID cid)
     // then this will be necessary, so just future proofing.
     if (new_archetype_id == INVALID_ARCHETYPE)
     {
-        new_archetype_id = ECS_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
+        new_archetype_id = cecs_create_archetype(ecs, ecs->entity_components_bitsets[eid]);
     }
 
-    ECS_move_archetype(ecs, eid, old_archetype_id, new_archetype_id);
+    cecs_move_archetype(ecs, eid, old_archetype_id, new_archetype_id);
 }
 
-void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid)
+void* cecs_get_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid)
 {
-    EntityIndex ei = ecs->entity_indices[eid];
-    Archetype* archetype = &ecs->archetypes[ei.archetype_id];
+    cecs_entity_index_t ei = ecs->entity_indices[eid];
+    cecs_archetype_t* archetype = &ecs->archetypes[ei.archetype_id];
     
     int size = ecs->component_infos[cid].size;
 
     // Convert to uint8_t for pointer arithmetic.
-    uint8_t* column = Archetype_get_column(archetype, cid);
+    uint8_t* column = cecs_archetype_get_column(archetype, cid);
     if (column == 0)
     {
         // TODO: Handle failure
@@ -369,35 +369,35 @@ void* ECS_get_component(ECS* ecs, EntityID eid, ComponentID cid)
 // Internal helper functions
 // TODO: Should these private functions be moved elsewhere? They're not
 //       intended to be part of the public api.
-static ArchetypeID ECS_create_archetype(ECS* ecs, 
-    ComponentsBitset archetype_bitset)
+static cecs_archetype_id_t cecs_create_archetype(cecs_t* ecs, 
+    cecs_components_bitset_t archetype_bitset)
 {
     // Currently we're allowing for an empty archetype to keep the logic simple,
     // so that every entity lives in an archetype. May change in the future.
-    ArchetypeID archetype_id = (ArchetypeID)chds_vec_size(ecs->archetypes);
-    Archetype new_archetype = {
+    cecs_archetype_id_t archetype_id = (cecs_archetype_id_t)chds_vec_size(ecs->archetypes);
+    cecs_archetype_t new_archetype = {
         .signature = {
             .bitset = archetype_bitset
         }
     };
 
     chds_vec_push_back(ecs->archetypes, new_archetype);
-    Archetype* archetype = &ecs->archetypes[archetype_id];
+    cecs_archetype_t* archetype = &ecs->archetypes[archetype_id];
 
-    // TODO: Remove Archetype_init?
-    //Archetype_init(archetype);
+    // TODO: Remove cecs_archetype_init?
+    //cecs_archetype_init(archetype);
 
     // Create archetype signature from bitset.
-    for (int i = 0; i < COMPONENT_BITSET_SIZE; ++i)
+    for (int i = 0; i < CECS_MAX_COMPONENTS; ++i)
     {
-        ComponentsBitset bitset = COMPONENT_ID_TO_BITSET(i);
+        cecs_components_bitset_t bitset = CECS_COMPONENT_ID_TO_BITSET(i);
 
         // Check if the archetype should have this component.
         if (bitset & archetype_bitset)
         {
-            ComponentInfo* temp = realloc(archetype->signature.infos,
+            cecs_component_info_t* temp = realloc(archetype->signature.infos,
                 (size_t)(archetype->signature.num_components + 1) * 
-                sizeof(ComponentInfo));
+                sizeof(cecs_component_info_t));
 
             if (!temp)
             {
@@ -440,7 +440,7 @@ static ArchetypeID ECS_create_archetype(ECS* ecs,
     const size_t num_views = chds_vec_size(ecs->views);
     for (int i = 0; i < num_views; ++i)
     {
-        View* view = &ecs->views[i];
+        cecs_view_t* view = &ecs->views[i];
 
         if ((archetype_bitset & view->include) == view->include &&
             (archetype_bitset & view->exclude) == 0)
@@ -452,16 +452,16 @@ static ArchetypeID ECS_create_archetype(ECS* ecs,
     return archetype_id;
 }
 
-static void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_id,
-    ArchetypeID new_archetype_id)
+static void cecs_move_archetype(cecs_t* ecs, cecs_entity_id_t id, cecs_archetype_id_t old_archetype_id,
+    cecs_archetype_id_t new_archetype_id)
 {
     // Add the entity to the new archetype.
-    Archetype* new_archetype = &ecs->archetypes[new_archetype_id];
-    Archetype_add_entity(ecs, new_archetype, id);
+    cecs_archetype_t* new_archetype = &ecs->archetypes[new_archetype_id];
+    cecs_archetype_add_entity(ecs, new_archetype, id);
     // TODO: Confirm this succeeeded?
 
     // Copy where the entity used to live.
-    const EntityIndex old_entity_index = ecs->entity_indices[id];
+    const cecs_entity_index_t old_entity_index = ecs->entity_indices[id];
        
     // Get the index of the last entity in the archetype.
     int column = (int)chds_vec_size(new_archetype->index_to_entity) - 1;
@@ -473,7 +473,7 @@ static void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_
     // Check for an old archetype.
     // NOTE: There should always be an old archetype except if the entity has just been
     //       created and is being moved to the empty archetype!
-    Archetype* old_archetype = 0;
+    cecs_archetype_t* old_archetype = 0;
     if (old_archetype_id != INVALID_ARCHETYPE)
     {
         old_archetype = &ecs->archetypes[old_archetype_id];
@@ -495,12 +495,12 @@ static void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_
     // For each component in the new archetype, search the old archetype for a matching one.
     for (int i = 0; i < new_archetype->signature.num_components; ++i)
     {
-        ComponentID cid_new = new_archetype->signature.infos[i].id;
+        cecs_component_id_t cid_new = new_archetype->signature.infos[i].id;
 
         int old_component_list_i = -1;
         for (int j = 0; j < old_archetype->signature.num_components; ++j)
         {
-            ComponentID cid_old = old_archetype->signature.infos[j].id;
+            cecs_component_id_t cid_old = old_archetype->signature.infos[j].id;
             if (cid_new == cid_old) 
             {
                 old_component_list_i = j;
@@ -511,7 +511,7 @@ static void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_
         // Not found, so nothing to copy from old to new.
         if (old_component_list_i == -1) continue;
 
-        const ComponentInfo info = ecs->component_infos[cid_new];
+        const cecs_component_info_t info = ecs->component_infos[cid_new];
 
         // Convert void* to byte array so we can do pointer arithmetic.
 
@@ -532,11 +532,11 @@ static void ECS_move_archetype(ECS* ecs, EntityID id, ArchetypeID old_archetype_
     }
 
     // Remove old data from archetype.
-    Archetype_remove_entity(ecs, old_archetype, old_entity_index.column);
+    cecs_archetype_remove_entity(ecs, old_archetype, old_entity_index.column);
 }
 
-static void Archetype_add_entity(const ECS* ecs, Archetype* archetype, 
-    EntityID eid)
+static void cecs_archetype_add_entity(const cecs_t* ecs, cecs_archetype_t* archetype, 
+    cecs_entity_id_t eid)
 {
     // TODO: Move to archetype.c
 
@@ -556,7 +556,7 @@ static void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
         // Grow each component list.
         for (int i = 0; i < archetype->signature.num_components; ++i)
         {
-            ComponentInfo info = archetype->signature.infos[i];
+            cecs_component_info_t info = archetype->signature.infos[i];
 
             void* temp = realloc(archetype->columns[i],
                 new_capacity * info.size);
@@ -572,7 +572,7 @@ static void Archetype_add_entity(const ECS* ecs, Archetype* archetype,
     }
 }
 
-static void Archetype_remove_entity(ECS* ecs, Archetype* archetype, 
+static void cecs_archetype_remove_entity(cecs_t* ecs, cecs_archetype_t* archetype, 
     int entity_index)
 {
     // TODO: Implement chds_vec remove functionality. Or some sort of function
@@ -581,7 +581,7 @@ static void Archetype_remove_entity(ECS* ecs, Archetype* archetype,
 
     int num_entities = (int)chds_vec_size(archetype->index_to_entity);
 
-    // Archetype already empty, should not happen.
+    // cecs_archetype_t already empty, should not happen.
     if (num_entities == 0)
     {
         // TODO: Handle logic error?
@@ -622,7 +622,7 @@ static void Archetype_remove_entity(ECS* ecs, Archetype* archetype,
     }
 
     // Update the entity we've moved's index.
-    const EntityID entity_to_remove = archetype->index_to_entity[last_entity_index];
+    const cecs_entity_id_t entity_to_remove = archetype->index_to_entity[last_entity_index];
     archetype->index_to_entity[entity_index] = entity_to_remove;
 
     // TODO: Should this ecs stuff be done elsewhere??????

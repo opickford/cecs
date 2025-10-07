@@ -1,5 +1,5 @@
-#ifndef ECS_INTERNAL_H
-#define ECS_INTERNAL_H
+#ifndef CECS_INTERNAL_H
+#define CECS_INTERNAL_H
 
 #include "ecs.h"
 
@@ -7,29 +7,29 @@
 
 typedef struct
 {
-    ArchetypeID archetype_id;
+    cecs_archetype_id_t archetype_id;
     int column;
-} EntityIndex;
+} cecs_entity_index_t;
 
-typedef struct ECS
+typedef struct cecs_t
 {
     // Entities
     int num_used_entities;
 
-    EntityID* free_entities;
+    cecs_entity_id_t* free_entities;
     int free_entities_count;
     int free_entities_capacity;
 
-    ComponentsBitset* entity_components_bitsets;
+    cecs_components_bitset_t* entity_components_bitsets;
 
     // Stores the archetype that the entity belongs to and the position in that
     // archetype.
-    EntityIndex* entity_indices;
+    cecs_entity_index_t* entity_indices;
 
-    chds_vec(ComponentInfo) component_infos;
-    chds_vec(Archetype) archetypes;
-    chds_vec(View) views;
+    chds_vec(cecs_component_info_t) component_infos;
+    chds_vec(cecs_archetype_t) archetypes;
+    chds_vec(cecs_view_t) views;
 
-} ECS;
+} cecs_t;
 
 #endif

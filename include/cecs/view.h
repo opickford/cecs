@@ -1,27 +1,27 @@
-#ifndef SYSTEM_H
-#define SYSTEM_H
+#ifndef CECS_SYSTEM_H
+#define CECS_SYSTEM_H
 
 #include "archetype.h"
 
 // TODO: COmment not implementation but how the user should use it!!!!
 
-typedef uint8_t ViewID;
+typedef uint8_t cecs_view_id_t;
 #define INVALID_VIEW UINT8_MAX
 
-typedef struct View View;
-typedef struct ECS ECS;
+typedef struct cecs_view_t cecs_view_t;
+typedef struct cecs_t cecs_t;
 
 typedef struct
 {
-    const ECS* ecs;
-    ViewID vid;
+    const cecs_t* ecs;
+    cecs_view_id_t vid;
 
-    ArchetypeID* aid;      // Current archetype.
+    cecs_archetype_id_t* aid;      // Current archetype.
     uint32_t rem;          // Remaining elements to iterate through.
 
     uint32_t num_entities; // Current number of entities in archetype.
 
-} ViewIter;
+} cecs_view_iter_t;
 
 
 
