@@ -53,9 +53,9 @@ int main()
 {
     cecs_t* ecs = cecs_create();
     
-    position_component = cecs_regsiter_component(ecs, sizeof(Position));
-    velocity_component = cecs_regsiter_component(ecs, sizeof(Velocity));
-    health_component = cecs_regsiter_component(ecs, sizeof(Health));
+    position_component = cecs_register_component(ecs, sizeof(Position));
+    velocity_component = cecs_register_component(ecs, sizeof(Velocity));
+    health_component = cecs_register_component(ecs, sizeof(Health));
 
     // Register a test view that uses position, velocity but excludes health.
     cecs_view_id_t test_view_id = cecs_view(ecs,

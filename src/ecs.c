@@ -46,7 +46,7 @@ cecs_t* cecs_create()
     return ecs;
 }
 
-cecs_component_id_t cecs_regsiter_component(cecs_t* ecs, uint32_t component_size)
+cecs_component_id_t cecs_register_component(cecs_t* ecs, uint32_t component_size)
 {
     // Store the size of the component for resizing archetype arrays.
     cecs_component_info_t ci = {

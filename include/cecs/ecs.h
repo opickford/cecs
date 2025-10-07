@@ -23,7 +23,7 @@ cecs_t* cecs_create();
 // TODO: cecs_destroy(cecs_t* ecs);
 
 // Component API
-cecs_component_id_t cecs_regsiter_component(cecs_t* ecs, uint32_t component_size);
+cecs_component_id_t cecs_register_component(cecs_t* ecs, uint32_t component_size);
 
 void* cecs_add_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid);
 void cecs_remove_component(cecs_t* ecs, cecs_entity_id_t eid, cecs_component_id_t cid);
