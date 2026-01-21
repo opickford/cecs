@@ -30,7 +30,7 @@ void cecs_remove_component(cecs* ecs, cecs_entity_id eid, cecs_component_id cid)
 void* cecs_get_component(cecs* ecs, cecs_entity_id eid, cecs_component_id cid);
 
 // cecs_view API
-cecs_view_id cecs_create_view(cecs* ecs, cecs_components_bitset include, cecs_components_bitset exclude);
+cecs_view_id cecs_view_create(cecs* ecs, cecs_components_bitset include, cecs_components_bitset exclude);
 cecs_view_iter cecs_view_iter_create(const cecs* ecs, cecs_view_id vid);
 
 // TODO: Rename cecs_view_tIter_next? Then it would be nice to go in view.h but can't

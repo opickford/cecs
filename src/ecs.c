@@ -59,7 +59,7 @@ cecs_component_id cecs_register_component(cecs* ecs, uint32_t component_size)
 }
 
 // TODO: Some function for passing in component ids separately to create bitsets.
-cecs_view_id cecs_create_view(cecs* ecs, cecs_components_bitset include, cecs_components_bitset exclude)
+cecs_view_id cecs_view_create(cecs* ecs, cecs_components_bitset include, cecs_components_bitset exclude)
 {
     // TODO: Should write tests for this sort of thing!
     // Include and exclude cannot have matching bits.

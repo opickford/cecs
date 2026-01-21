@@ -58,7 +58,7 @@ int main()
     health_component = cecs_register_component(ecs, sizeof(Health));
 
     // Register a test view that uses position, velocity but excludes health.
-    cecs_view_id test_view_id = cecs_create_view(ecs,
+    cecs_view_id test_view_id = cecs_view_create(ecs,
         CECS_COMPONENT_ID_TO_BITSET(position_component) | CECS_COMPONENT_ID_TO_BITSET(velocity_component),
         CECS_COMPONENT_ID_TO_BITSET(health_component)
     );
