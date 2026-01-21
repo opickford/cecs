@@ -4,7 +4,9 @@
 #include <stdint.h>
 
 // TODO: it would be nice to shorten these names.
-typedef uint32_t cecs_entity_id_t;
+// TODO: Can definitely rename to -> cecs_entity instead,
+//       the id part is unnecessary.
+typedef uint32_t cecs_entity_id;
 #define INVALID_ENTITY UINT32_MAX
 
 
