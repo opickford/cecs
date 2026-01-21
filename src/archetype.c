@@ -4,12 +4,12 @@
 #include <string.h>
 
 // TODO: Not really necessary.
-void cecs_archetype_init(cecs_archetype_t* archetype)
+void cecs_archetype_init(cecs_archetype* archetype)
 {
-    memset(archetype, 0, sizeof(cecs_archetype_t));
+    memset(archetype, 0, sizeof(cecs_archetype));
 }
 
-void cecs_archetype_destroy(cecs_archetype_t* archetype)
+void cecs_archetype_destroy(cecs_archetype* archetype)
 {
     for (int i = 0; i < archetype->signature.num_components; ++i)
     {
@@ -24,9 +24,9 @@ void cecs_archetype_destroy(cecs_archetype_t* archetype)
 // TODO: Currently a linear search, not ideal. Low number of components should be 
 //       fine but really want to improve this.
 // TODO: This sort of thing could be cached right? DEFINITELY. maybe this could relate to doing 'views'.
-void* cecs_archetype_get_column(cecs_archetype_t* archetype, cecs_component_id_t cid)
+void* cecs_archetype_get_column(cecs_archetype* archetype, cecs_component_id cid)
 {
-    const cecs_components_signature_t* signature = &archetype->signature;
+    const cecs_components_signature* signature = &archetype->signature;
     for (int i = 0; i < signature->num_components; ++i)
     {
         if (signature->infos[i].id == cid)

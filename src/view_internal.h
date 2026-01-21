@@ -7,16 +7,17 @@
 
 #include <chds/vec.h>
 
-typedef struct cecs_view_t
+// TODO: should this not be like typedef struct cecs_view {} cecs_view?
+typedef struct cecs_view
 {
-    chds_vec(cecs_archetype_id_t) archetype_ids;
+    CHDS_VEC(cecs_archetype_id) archetype_ids;
 
     // TODO: Document
-    cecs_components_bitset_t include;
-    cecs_components_bitset_t exclude;
+    cecs_components_bitset include;
+    cecs_components_bitset exclude;
 
-} cecs_view_t;
+} cecs_view;
 
-void cecs_view_destroy(cecs_view_t* view);
+void cecs_view_destroy(cecs_view* view);
 
 #endif
