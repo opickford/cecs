@@ -1,6 +1,6 @@
 # CECS
 
-An Entity Component System in C, specifically designed for my game/game engine https://github.com/opickford/range.
+An Entity Component System in C, specifically designed for my game/game engine https://github.com/opickford/csrge.
 
 ## TODOs
 - [ ] README
