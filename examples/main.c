@@ -1,4 +1,4 @@
-﻿#include "cecs/ecs.h"
+﻿#include "CECS/ecs.h"
 
 #include <string.h>
 #include <Windows.h> // Sleep
@@ -8,9 +8,9 @@
 // TODO: Get a better example working, how can we define components.. - this cannot be done at compile time i believe.
 
 // TODO: How do we fix this.
-cecs_component_id position_component;
-cecs_component_id velocity_component;
-cecs_component_id health_component;
+CECS_ComponentId position_component;
+CECS_ComponentId velocity_component;
+CECS_ComponentId health_component;
 
 typedef struct
 {
@@ -28,9 +28,9 @@ typedef struct
     int max;
 } Health;
 
-static void test_func(cecs* ecs, cecs_view_id view_id)
+static void test_func(CECS* ecs, CECS_ViewId view_id)
 {
-    cecs_view_iter it = cecs_view_iter_create(ecs, view_id);
+    CECS_ViewIter it = cecs_view_iter_create(ecs, view_id);
     while (cecs_view_iter_next(&it))
     {
         Position* positions = cecs_get_column(it, position_component);
@@ -51,21 +51,21 @@ static void test_func(cecs* ecs, cecs_view_id view_id)
 
 int main()
 {
-    cecs* ecs = cecs_create();
+    CECS* ecs = cecs_create();
     
     position_component = cecs_register_component(ecs, sizeof(Position));
     velocity_component = cecs_register_component(ecs, sizeof(Velocity));
     health_component = cecs_register_component(ecs, sizeof(Health));
 
     // Register a test view that uses position, velocity but excludes health.
-    cecs_view_id test_view_id = cecs_view_create(ecs,
+    CECS_ViewId test_view_id = cecs_view_create(ecs,
         CECS_COMPONENT_ID_TO_BITSET(position_component) | CECS_COMPONENT_ID_TO_BITSET(velocity_component),
         CECS_COMPONENT_ID_TO_BITSET(health_component)
     );
 
     // TODO: Document how component pointers are only valid until the 
     //       next component is added!! or like how it actually works....
-    cecs_entity_id e0 = cecs_create_entity(ecs);
+    CECS_EntityId e0 = cecs_create_entity(ecs);
 
     Position* e0_pos = cecs_add_component(ecs, e0, position_component);
     e0_pos->x = 1;
@@ -81,7 +81,7 @@ int main()
     
     // TODO: Can definitely rename to -> cecs_entity instead,
     //       the id part is unnecessary.
-    cecs_entity_id e1 = cecs_create_entity(ecs);
+    CECS_EntityId e1 = cecs_create_entity(ecs);
     cecs_add_component(ecs, e1, velocity_component);
     cecs_add_component(ecs, e1, position_component);
     cecs_add_component(ecs, e1, health_component);

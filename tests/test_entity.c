@@ -1,14 +1,14 @@
 #ifndef TEST_ENTITY_H
 #define TEST_ENTITY_H
 
-#include <cecs/ecs.h>
+#include <CECS/ecs.h>
 
 #include <assert.h>
 
 static void test_create()
 {
-    cecs* ecs = cecs_create();
-    cecs_entity_id e = cecs_create_entity(ecs);
+    CECS* ecs = cecs_create();
+    CECS_EntityId e = cecs_create_entity(ecs);
 
     assert(e != INVALID_ENTITY);
 }
