@@ -14,6 +14,7 @@ option(CECS_INSTALL "Enable installation" ON)
 
 if (CECS_BUILD_EXAMPLES)
     add_subdirectory(examples)
+    set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "example")
 endif()
 
 if (CECS_BUILD_TESTS)
@@ -25,5 +26,3 @@ endif()
 if(CECS_INSTALL)
     include(cmake/install.cmake)
 endif()
-
-set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT "example")
