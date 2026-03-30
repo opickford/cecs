@@ -16,9 +16,9 @@ install(DIRECTORY include/
 )
 
 # version.h lives in the build dir, so must be installed separately to the other headers.
-# install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/chds/version.h
-#     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/chds
-# )
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/cecs/version.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cecs
+)
 
 install(EXPORT cecsTargets
     FILE cecsTargets.cmake
