@@ -1,6 +1,4 @@
-﻿list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs")
-
-find_package(chds REQUIRED)
+﻿find_package(chds REQUIRED)
 
 add_library (cecs STATIC 
 	"ecs_internal.h"
@@ -28,12 +26,12 @@ target_link_libraries(cecs
 
 target_include_directories(cecs 
 	PUBLIC
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+		$<BUILD_INTERFACE:${CECS_SOURCE_DIR}/include>
+		$<BUILD_INTERFACE:${CECS_BINARY_DIR}/include>
 		$<INSTALL_INTERFACE:include>
 
 	PRIVATE
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include/cecs>
+		$<BUILD_INTERFACE:${CECS_SOURCE_DIR}/include/cecs>
 )
 
 # TODO: Do we need.

@@ -6,6 +6,14 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+set(CECS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(CECS_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+configure_file(
+	${CECS_SOURCE_DIR}/cmake/version.h.in
+	${CECS_BINARY_DIR}/include/cecs/version.h
+)
+
 add_subdirectory(src)
 
 option(CECS_BUILD_EXAMPLES "Build examples" ON)

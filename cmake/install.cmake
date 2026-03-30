@@ -4,19 +4,19 @@ include(CMakePackageConfigHelpers)
 # Export targets
 install(TARGETS cecs 
     EXPORT cecsTargets
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-# Copy contents of include dir.
-install(DIRECTORY include/ 
+# Copy public headers.
+install(DIRECTORY ${CECS_SOURCE_DIR}/include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 # version.h lives in the build dir, so must be installed separately to the other headers.
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/cecs/version.h
+install(FILES ${CECS_BINARY_DIR}/include/cecs/version.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/cecs
 )
 
