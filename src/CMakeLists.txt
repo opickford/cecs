@@ -29,6 +29,7 @@ target_link_libraries(cecs
 target_include_directories(cecs 
 	PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 		$<INSTALL_INTERFACE:include>
 
 	PRIVATE
@@ -39,4 +40,3 @@ target_include_directories(cecs
 set_target_properties(cecs PROPERTIES
     DEBUG_POSTFIX d
 )
-
