@@ -7,7 +7,7 @@
 #include "entity.h"
 #include "view.h"
 
-typedef struct cecs cecs;
+typedef struct CECS CECS;
 
 // TODO: Terminology should be refactored to use table like names: 
 //       column, row, field etc.
@@ -18,28 +18,28 @@ typedef struct cecs cecs;
 
 // TODO: Comments for public usage.
 
-// cecs API
-cecs* cecs_create();
-// TODO: cecs_destroy(cecs* ecs);
+// CECS API
+CECS* cecs_create();
+// TODO: cecs_destroy(CECS* ecs);
 
 // Component API
-cecs_component_id cecs_register_component(cecs* ecs, uint32_t component_size);
+CECS_ComponentId cecs_register_component(CECS* ecs, uint32_t component_size);
 
-void* cecs_add_component(cecs* ecs, cecs_entity_id eid, cecs_component_id cid);
-void cecs_remove_component(cecs* ecs, cecs_entity_id eid, cecs_component_id cid);
-void* cecs_get_component(cecs* ecs, cecs_entity_id eid, cecs_component_id cid);
+void* cecs_add_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid);
+void cecs_remove_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid);
+void* cecs_get_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid);
 
-// cecs_view API
-cecs_view_id cecs_view_create(cecs* ecs, cecs_components_bitset include, cecs_components_bitset exclude);
-cecs_view_iter cecs_view_iter_create(const cecs* ecs, cecs_view_id vid);
+// CECS_View API
+CECS_ViewId cecs_view_create(CECS* ecs, CECS_ComponentsBitset include, CECS_ComponentsBitset exclude);
+CECS_ViewIter cecs_view_iter_create(const CECS* ecs, CECS_ViewId vid);
 
 // TODO: Rename cecs_view_tIter_next? Then it would be nice to go in view.h but can't
 //       really right?
-int cecs_view_iter_next(cecs_view_iter* it);
-void* cecs_get_column(cecs_view_iter it, cecs_component_id cid);
+int cecs_view_iter_next(CECS_ViewIter* it);
+void* cecs_get_column(CECS_ViewIter it, CECS_ComponentId cid);
 
 // Entity API
-cecs_entity_id cecs_create_entity(cecs* ecs);
-void cecs_destroy_entity(cecs* ecs, cecs_entity_id id);
+CECS_EntityId cecs_create_entity(CECS* ecs);
+void cecs_destroy_entity(CECS* ecs, CECS_EntityId id);
 
 #endif

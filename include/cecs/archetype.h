@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-typedef uint16_t cecs_archetype_id;
+typedef uint16_t CECS_ArchetypeId;
 #define INVALID_ARCHETYPE UINT16_MAX
 
-typedef struct cecs_archetype cecs_archetype;
+typedef struct CECS_Archetype CECS_Archetype;
 
 #endif

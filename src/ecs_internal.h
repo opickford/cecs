@@ -9,29 +9,29 @@
 
 typedef struct
 {
-    cecs_archetype_id archetype_id;
+    CECS_ArchetypeId archetype_id;
     int column;
-} cecs_entity_index;
+} CECS_EntityIndex;
 
-typedef struct cecs
+typedef struct CECS
 {
     // Entities
     int num_used_entities;
 
-    cecs_entity_id* free_entities;
+    CECS_EntityId* free_entities;
     int free_entities_count;
     int free_entities_capacity;
 
-    cecs_components_bitset* entity_components_bitsets;
+    CECS_ComponentsBitset* entity_components_bitsets;
 
     // Stores the archetype that the entity belongs to and the position in that
     // archetype.
-    cecs_entity_index* entity_indices;
+    CECS_EntityIndex* entity_indices;
 
-    CHDS_Vec(cecs_component_info) component_infos;
-    CHDS_Vec(cecs_archetype) archetypes;
-    CHDS_Vec(cecs_view) views;
+    CHDS_Vec(CECS_ComponentInfo) component_infos;
+    CHDS_Vec(CECS_Archetype) archetypes;
+    CHDS_Vec(CECS_View) views;
 
-} cecs;
+} CECS;
 
 #endif

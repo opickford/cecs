@@ -9,20 +9,20 @@
 #include <chds/vec.h>
 
 // Stores columns for entities matching a signature.
-typedef struct cecs_archetype
+typedef struct CECS_Archetype
 {
-    cecs_components_signature signature;
+    CECS_ComponentsSignature signature;
 
     // TODO: Some sort of map?
-    CHDS_Vec(cecs_entity_id) index_to_entity;
+    CHDS_Vec(CECS_EntityId) index_to_entity;
 
     void** columns;
 
-} cecs_archetype;
+} CECS_Archetype;
 
-// TODO: A bit misleading as the cecs actually properly initialises this.
-void cecs_archetype_init(cecs_archetype* archetype);
-void cecs_archetype_destroy(cecs_archetype* archetype);
-void* cecs_archetype_get_column(cecs_archetype* archetype, cecs_component_id cid);
+// TODO: A bit misleading as the CECS actually properly initialises this.
+void cecs_archetype_init(CECS_Archetype* archetype);
+void cecs_archetype_destroy(CECS_Archetype* archetype);
+void* cecs_archetype_get_column(CECS_Archetype* archetype, CECS_ComponentId cid);
 
 #endif
