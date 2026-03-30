@@ -1,4 +1,4 @@
-﻿find_package(chds REQUIRED)
+﻿find_package(chds 0.1 REQUIRED)
 
 add_library (cecs STATIC 
 	"ecs_internal.h"
