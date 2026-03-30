@@ -19,6 +19,9 @@ jobs:
           curl -L -o chds-v0.1.0.zip https://github.com/opickford/chds/releases/download/v0.1.0/chds-v0.1.0.zip
           powershell -Command "Expand-Archive chds-v0.1.0.zip -DestinationPath libs\chds"
 
+      - name: Debug unzip
+        run: dir libs\chds /s
+
       - name: Configure
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$PWD/libs"
 
