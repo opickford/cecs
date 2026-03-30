@@ -1,6 +1,5 @@
 ﻿list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs")
 
-#set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs/chds/lib/cmake/chds/")
 find_package(chds REQUIRED)
 
 add_library (cecs STATIC 
