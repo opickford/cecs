@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.8)
+﻿cmake_minimum_required(VERSION 3.11)
 
 project (cecs VERSION 1.0.0 LANGUAGES C)
 

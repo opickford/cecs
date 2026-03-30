@@ -28,9 +28,9 @@ typedef struct cecs
     // archetype.
     cecs_entity_index* entity_indices;
 
-    CHDS_VEC(cecs_component_info) component_infos;
-    CHDS_VEC(cecs_archetype) archetypes;
-    CHDS_VEC(cecs_view) views;
+    CHDS_Vec(cecs_component_info) component_infos;
+    CHDS_Vec(cecs_archetype) archetypes;
+    CHDS_Vec(cecs_view) views;
 
 } cecs;
 

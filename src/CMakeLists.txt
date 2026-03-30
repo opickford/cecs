@@ -1,4 +1,5 @@
 ﻿list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/libs")
+
 find_package(chds REQUIRED)
 
 add_library (cecs STATIC 

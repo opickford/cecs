@@ -14,7 +14,7 @@ typedef struct cecs_archetype
     cecs_components_signature signature;
 
     // TODO: Some sort of map?
-    CHDS_VEC(cecs_entity_id) index_to_entity;
+    CHDS_Vec(cecs_entity_id) index_to_entity;
 
     void** columns;
 
