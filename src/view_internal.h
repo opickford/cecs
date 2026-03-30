@@ -10,7 +10,7 @@
 // TODO: should this not be like typedef struct cecs_view {} cecs_view?
 typedef struct cecs_view
 {
-    CHDS_VEC(cecs_archetype_id) archetype_ids;
+    CHDS_Vec(cecs_archetype_id) archetype_ids;
 
     // TODO: Document
     cecs_components_bitset include;

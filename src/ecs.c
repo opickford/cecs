@@ -51,9 +51,9 @@ cecs_component_id cecs_register_component(cecs* ecs, uint32_t component_size)
     // Store the size of the component for resizing archetype arrays.
     cecs_component_info ci = {
         .size = component_size,
-        .id = (cecs_component_id)CHDS_VEC_SIZE(ecs->component_infos)
+        .id = (cecs_component_id)chds_vec_size(ecs->component_infos)
     };
-    CHDS_VEC_PUSH_BACK(ecs->component_infos, ci);
+    chds_vec_push(ecs->component_infos, ci);
 
     return ci.id;
 }
@@ -68,7 +68,7 @@ cecs_view_id cecs_view_create(cecs* ecs, cecs_components_bitset include, cecs_co
         return INVALID_VIEW;
     }
 
-    cecs_view_id num_views = (cecs_view_id)CHDS_VEC_SIZE(ecs->views);
+    cecs_view_id num_views = (cecs_view_id)chds_vec_size(ecs->views);
 
     // Look for existing view.
     // TODO: Map would be nicer.
@@ -82,7 +82,7 @@ cecs_view_id cecs_view_create(cecs* ecs, cecs_components_bitset include, cecs_co
         }
     }
 
-    CHDS_VEC_PUSH_BACK(ecs->views, ((cecs_view) { 
+    chds_vec_push(ecs->views, ((cecs_view) { 
         .include = include, 
         .exclude = exclude 
     }));
@@ -90,7 +90,7 @@ cecs_view_id cecs_view_create(cecs* ecs, cecs_components_bitset include, cecs_co
     cecs_view* v = &ecs->views[num_views];
 
     // Load matching archetypes into ecs.
-    size_t num_archetypes = CHDS_VEC_SIZE(ecs->archetypes);
+    size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int aid = 0; aid < num_archetypes; ++aid)
     {
         const cecs_components_bitset bits = ecs->archetypes[aid].signature.bitset;
@@ -101,7 +101,7 @@ cecs_view_id cecs_view_create(cecs* ecs, cecs_components_bitset include, cecs_co
         if ((bits & include) == include &&
             (bits & exclude) == 0)
         {
-            CHDS_VEC_PUSH_BACK(v->archetype_ids, aid);
+            chds_vec_push(v->archetype_ids, aid);
         }
     }
 
@@ -112,7 +112,7 @@ cecs_view_iter cecs_view_iter_create(const cecs* ecs, const cecs_view_id vid)
 {
     cecs_view* view = &ecs->views[vid];
 
-    uint32_t num_archetypes = (uint32_t)CHDS_VEC_SIZE(view->archetype_ids);
+    uint32_t num_archetypes = (uint32_t)chds_vec_size(view->archetype_ids);
     uint32_t num_entities = 0;
 
     // Avoid ptr arithmetic on nullptr.
@@ -121,7 +121,7 @@ cecs_view_iter cecs_view_iter_create(const cecs* ecs, const cecs_view_id vid)
     if (num_archetypes > 0)
     {
         start = view->archetype_ids - 1; // Offset by 1 because of initial increment.
-        num_entities = (uint32_t)CHDS_VEC_SIZE(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
+        num_entities = (uint32_t)chds_vec_size(ecs->archetypes[view->archetype_ids[0]].index_to_entity);
     }
 
     cecs_view_iter it = {
@@ -142,7 +142,7 @@ int cecs_view_iter_next(cecs_view_iter* it)
     // Move to next archetype.
     ++it->aid;
 
-    it->num_entities = (uint32_t)CHDS_VEC_SIZE(it->ecs->archetypes[*it->aid].index_to_entity);
+    it->num_entities = (uint32_t)chds_vec_size(it->ecs->archetypes[*it->aid].index_to_entity);
 
     return 1;
 }
@@ -238,7 +238,7 @@ void cecs_destroy_entity(cecs* ecs, cecs_entity_id id)
     // Remove entity from it's archetype, which should remove it's components,
     // note, sadly we have to search for the archetype. Could use a map from
     // entity id to archetype id (index). TODO: consider.
-    size_t num_archetypes = CHDS_VEC_SIZE(ecs->archetypes);
+    size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
         cecs_archetype* archetype = &ecs->archetypes[i];
@@ -274,7 +274,7 @@ void* cecs_add_component(cecs* ecs, cecs_entity_id eid, cecs_component_id cid)
     // Must use cecs_archetype_id as if we create a new archetype we will invalidate the pointers.
     cecs_archetype_id new_archetype_id = INVALID_ARCHETYPE;
     cecs_archetype_id old_archetype_id = INVALID_ARCHETYPE;
-    const size_t num_archetypes = CHDS_VEC_SIZE(ecs->archetypes);
+    const size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
         if (ecs->archetypes[i].signature.bitset == old_components_bitset)
@@ -323,7 +323,7 @@ void cecs_remove_component(cecs* ecs, cecs_entity_id eid, cecs_component_id cid)
     // Must use cecs_archetype_id as if we create a new archetype we will invalidate the pointers.
     cecs_archetype_id new_archetype_id = INVALID_ARCHETYPE;
     cecs_archetype_id old_archetype_id = INVALID_ARCHETYPE;
-    const size_t num_archetypes = CHDS_VEC_SIZE(ecs->archetypes);
+    const size_t num_archetypes = chds_vec_size(ecs->archetypes);
     for (int i = 0; i < num_archetypes; ++i)
     {
         if (ecs->archetypes[i].signature.bitset == old_components_bitset)
@@ -374,14 +374,14 @@ static cecs_archetype_id cecs_create_archetype(cecs* ecs,
 {
     // Currently we're allowing for an empty archetype to keep the logic simple,
     // so that every entity lives in an archetype. May change in the future.
-    cecs_archetype_id archetype_id = (cecs_archetype_id)CHDS_VEC_SIZE(ecs->archetypes);
+    cecs_archetype_id archetype_id = (cecs_archetype_id)chds_vec_size(ecs->archetypes);
     cecs_archetype new_archetype = {
         .signature = {
             .bitset = archetype_bitset
         }
     };
 
-    CHDS_VEC_PUSH_BACK(ecs->archetypes, new_archetype);
+    chds_vec_push(ecs->archetypes, new_archetype);
     cecs_archetype* archetype = &ecs->archetypes[archetype_id];
 
     // TODO: Remove cecs_archetype_init?
@@ -437,7 +437,7 @@ static cecs_archetype_id cecs_create_archetype(cecs* ecs,
     }
 
     // Add the archetype to all views that fit it's signature.
-    const size_t num_views = CHDS_VEC_SIZE(ecs->views);
+    const size_t num_views = chds_vec_size(ecs->views);
     for (int i = 0; i < num_views; ++i)
     {
         cecs_view* view = &ecs->views[i];
@@ -445,7 +445,7 @@ static cecs_archetype_id cecs_create_archetype(cecs* ecs,
         if ((archetype_bitset & view->include) == view->include &&
             (archetype_bitset & view->exclude) == 0)
         {
-            CHDS_VEC_PUSH_BACK(view->archetype_ids, archetype_id);
+            chds_vec_push(view->archetype_ids, archetype_id);
         }
     }
 
@@ -464,7 +464,7 @@ static void cecs_move_archetype(cecs* ecs, cecs_entity_id id, cecs_archetype_id 
     const cecs_entity_index old_entity_index = ecs->entity_indices[id];
        
     // Get the index of the last entity in the archetype.
-    int column = (int)CHDS_VEC_SIZE(new_archetype->index_to_entity) - 1;
+    int column = (int)chds_vec_size(new_archetype->index_to_entity) - 1;
 
     // Update information on where the entity is.
     ecs->entity_indices[id].archetype_id = new_archetype_id;
@@ -546,9 +546,9 @@ static void cecs_archetype_add_entity(const cecs* ecs, cecs_archetype* archetype
     //       now there is 
 
     // TODO: Hack, not sure how else to do this.
-    size_t old_capacity = CHDS_VEC_CAPACITY(archetype->index_to_entity);
-    CHDS_VEC_PUSH_BACK(archetype->index_to_entity, eid);
-    size_t new_capacity = CHDS_VEC_CAPACITY(archetype->index_to_entity);
+    size_t old_capacity = chds_vec_capacity(archetype->index_to_entity);
+    chds_vec_push(archetype->index_to_entity, eid);
+    size_t new_capacity = chds_vec_capacity(archetype->index_to_entity);
 
     // TODO: clear/initialise data??
     if (old_capacity != new_capacity)
@@ -579,7 +579,7 @@ static void cecs_archetype_remove_entity(cecs* ecs, cecs_archetype* archetype,
     //       to do this? Removing won't really be what we want as that would
     //       shift everything rather than just quickly swapping.
 
-    int num_entities = (int)CHDS_VEC_SIZE(archetype->index_to_entity);
+    int num_entities = (int)chds_vec_size(archetype->index_to_entity);
 
     // cecs_archetype already empty, should not happen.
     if (num_entities == 0)
@@ -596,7 +596,7 @@ static void cecs_archetype_remove_entity(cecs* ecs, cecs_archetype* archetype,
     if (entity_index == last_entity_index)
     {
         // TODO: CHDS_VEC_POP_BACK functionality?
-        chds_vec_header* h = CHDS_VEC_HEADER(archetype->index_to_entity);
+        CHDS_VecHeader* h = chds_vec__header(archetype->index_to_entity);
         --h->size;
         
         return;
@@ -633,7 +633,7 @@ static void cecs_archetype_remove_entity(cecs* ecs, cecs_archetype* archetype,
 
     // 'Remove' the last entity.
     // TODO: CHDS_VEC_POP_BACK functionality?
-    chds_vec_header* h = CHDS_VEC_HEADER(archetype->index_to_entity);
+    CHDS_VecHeader* h = chds_vec__header(archetype->index_to_entity);
     --h->size;
 }
 
