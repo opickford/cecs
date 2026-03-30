@@ -5,7 +5,7 @@
 
 #include <assert.h>
 
-inline void test_create()
+static void test_create()
 {
     cecs* ecs = cecs_create();
     cecs_entity_id e = cecs_create_entity(ecs);
@@ -13,9 +13,15 @@ inline void test_create()
     assert(e != INVALID_ENTITY);
 }
 
-inline void test_entity()
+static void test_entity()
 {
     test_create();
+}
+
+int main()
+{
+    test_entity();
+    return 0;
 }
 
 #endif
