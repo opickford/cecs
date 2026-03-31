@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+// TODO: Need to be returning some error code or at least document it.
+
 static CECS_ArchetypeId cecs_create_archetype(CECS* ecs, 
     CECS_ComponentsBitset archetype_bitset);
 
