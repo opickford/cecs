@@ -2,10 +2,12 @@
 
 CECS is an Entity Component System (ECS) library in C, specifically designed for my game/game engine https://github.com/opickford/csrge.
 
-[![Windows Release CI](https://github.com/opickford/cecs/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/opickford/cecs/actions/workflows/ci.yml)
-TODO: licence etc
+[![build](https://img.shields.io/github/actions/workflow/status/opickford/cecs/ci.yml?style=for-the-badge&label=build)](https://github.com/opickford/cecs/actions)
+[![license](https://img.shields.io/github/license/opickford/cecs?style=for-the-badge)](LICENSE)
+[![version](https://img.shields.io/github/v/tag/opickford/cecs?style=for-the-badge&label=version)](https://github.com/opickford/cecs/tags)
 
 ## Contents
+todo: refer to examples instead of usage?
 - [Overview](#overview)
 - [Requirements](#requirements)
 - [Dependencies](#dependencies)
