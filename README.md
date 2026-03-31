@@ -7,7 +7,6 @@ CECS is an Entity Component System (ECS) library in C, specifically designed for
 [![version](https://img.shields.io/github/v/tag/opickford/cecs?style=for-the-badge&label=version)](https://github.com/opickford/cecs/tags)
 
 ## Contents
-todo: refer to examples instead of usage?
 - [Overview](#overview)
 - [Requirements](#requirements)
 - [Dependencies](#dependencies)
@@ -110,6 +109,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(chds cecs)
 
 target_link_libraries(your_target PRIVATE cecs)
+```
 
 ---
 
@@ -126,10 +126,12 @@ TODO
 The current library version is available at runtime:
 
 ```c
-include <cecs/version.h>
+#include <cecs/version.h>
 
 printf("cecs version: %s\n", CECS_VERSION_STRING);
 ```
+
+### Examples
 
 See the [examples](examples/) directory for more.
 
@@ -147,14 +149,6 @@ ctest -C Release --test-dir build --output-on-failure
 
 ---
 
-## Integration
-
-### CMake FetchContent
-
-TODO
-
----
-
 ## Versioning
 
 TODO
@@ -165,10 +159,6 @@ This project follows [semantic versioning](https://semver.org). See [CHANGELOG.m
 
 ## License
 
-TODO
-
-MIT — see [LICENSE](LICENSE) for details.
-
+This project is licensed under the [MIT License](LICENSE).
 
 ---
-
