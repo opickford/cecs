@@ -4,7 +4,6 @@ CECS is an Entity Component System (ECS) library in C, specifically designed for
 
 [![build](https://img.shields.io/github/actions/workflow/status/opickford/cecs/ci.yml?style=for-the-badge&label=build)](https://github.com/opickford/cecs/actions)
 [![license](https://img.shields.io/github/license/opickford/cecs?style=for-the-badge)](LICENSE)
-[![version](https://img.shields.io/github/v/tag/opickford/cecs?style=for-the-badge&label=version)](https://github.com/opickford/cecs/tags)
 
 ## Contents
 - [Overview](#overview)
