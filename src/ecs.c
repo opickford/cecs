@@ -597,10 +597,7 @@ static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype,
     // Handle easy case of the entity being the last in the archetype.
     if (entity_index == last_entity_index)
     {
-        // TODO: CHDS_VEC_POP_BACK functionality?
-        CHDS_VecHeader* h = chds_vec__header(archetype->index_to_entity);
-        --h->size;
-        
+        chds_vec_pop(archetype->index_to_entity);
         return;
     }
 
@@ -634,8 +631,6 @@ static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype,
     ecs->entity_indices[entity_to_remove].archetype_id = INVALID_ARCHETYPE;
 
     // 'Remove' the last entity.
-    // TODO: CHDS_VEC_POP_BACK functionality?
-    CHDS_VecHeader* h = chds_vec__header(archetype->index_to_entity);
-    --h->size;
+    chds_vec_pop(archetype->index_to_entity);
 }
 
