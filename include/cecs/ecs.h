@@ -35,8 +35,10 @@ CECS_ViewIter cecs_view_iter_create(const CECS* ecs, CECS_ViewId vid);
 
 // TODO: Rename cecs_view_tIter_next? Then it would be nice to go in view.h but can't
 //       really right?
+// TODO: should these be cecs_view_iter_<...>()
 int cecs_view_iter_next(CECS_ViewIter* it);
 void* cecs_get_column(CECS_ViewIter it, CECS_ComponentId cid);
+const CECS_EntityId* cecs_get_entity_ids(CECS_ViewIter it);
 
 // Entity API
 CECS_EntityId cecs_create_entity(CECS* ecs);
