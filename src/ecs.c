@@ -368,6 +368,15 @@ void* cecs_get_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
     return component;
 }
 
+const CECS_EntityId* cecs_get_entity_ids(CECS_ViewIter it)
+{
+    // TODO: should this delegate? should this even be in ecs.c?
+    //       for now not an issue, that would be creating a getter for
+    //       no reason.
+    CECS_Archetype* archetype = &it.ecs->archetypes[*it.aid];
+    return archetype->index_to_entity;
+}
+
 // Internal helper functions
 // TODO: Should these private functions be moved elsewhere? They're not
 //       intended to be part of the public api.

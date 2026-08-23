@@ -33,14 +33,17 @@ static void test_func(CECS* ecs, CECS_ViewId view_id)
     CECS_ViewIter it = cecs_view_iter_create(ecs, view_id);
     while (cecs_view_iter_next(&it))
     {
+        const CECS_EntityId* ids = cecs_get_entity_ids(it);
         Position* positions = cecs_get_column(it, position_component);
         Velocity* velocities = cecs_get_column(it, velocity_component);
 
         for (uint32_t i = 0; i < it.num_entities; ++i)
         {
+            CECS_EntityId id = ids[i];
             Position p = positions[i];
             Velocity v = velocities[i];
 
+            printf("Entity %u\n", id);
             printf("Position: %f %f %f\n", p.x, p.y, p.z);
             printf("Velocity: %f %f %f\n", v.vx, v.vy, v.vz);
         }
