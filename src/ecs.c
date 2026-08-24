@@ -250,7 +250,7 @@ void cecs_destroy_entity(CECS* ecs, CECS_EntityId id)
         CECS_Archetype* archetype = &ecs->archetypes[i];
         if (archetype->signature.bitset == old_bitset)
         {
-            cecs_archetype_remove_entity(ecs, archetype, ecs->entity_indices[id].column);
+            cecs_archetype_remove_entity(archetype, ecs->entity_indices[id].column);
             break;
         }
     }
@@ -555,7 +555,7 @@ static void cecs_move_archetype(CECS* ecs, CECS_EntityId id, CECS_ArchetypeId ol
     }
 
     // Remove old data from archetype.
-    cecs_archetype_remove_entity(ecs, old_archetype, old_entity_index.column);
+    cecs_archetype_remove_entity(old_archetype, old_entity_index.column);
 }
 
 static void cecs_archetype_add_entity(const CECS* ecs, CECS_Archetype* archetype, 
