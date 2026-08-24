@@ -23,6 +23,7 @@ static void cecs_archetype_add_entity(const CECS* ecs,
     CECS_EntityId eid);
 
 static void cecs_archetype_remove_entity(
+    CECS* ecs,
     CECS_Archetype* archetype,
     int entity_index);
 
@@ -250,7 +251,7 @@ void cecs_destroy_entity(CECS* ecs, CECS_EntityId id)
         CECS_Archetype* archetype = &ecs->archetypes[i];
         if (archetype->signature.bitset == old_bitset)
         {
-            cecs_archetype_remove_entity(archetype, ecs->entity_indices[id].column);
+            cecs_archetype_remove_entity(ecs, archetype, ecs->entity_indices[id].column);
             break;
         }
     }
@@ -555,7 +556,7 @@ static void cecs_move_archetype(CECS* ecs, CECS_EntityId id, CECS_ArchetypeId ol
     }
 
     // Remove old data from archetype.
-    cecs_archetype_remove_entity(old_archetype, old_entity_index.column);
+    cecs_archetype_remove_entity(ecs, old_archetype, old_entity_index.column);
 }
 
 static void cecs_archetype_add_entity(const CECS* ecs, CECS_Archetype* archetype, 
@@ -596,8 +597,8 @@ static void cecs_archetype_add_entity(const CECS* ecs, CECS_Archetype* archetype
 }
 
 // TODO: move to archetype.c
-static void cecs_archetype_remove_entity(CECS_Archetype* archetype, 
-    int entity_index)
+static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype, 
+    int column)
 {
     // TODO: Implement CHDS_VEC remove functionality. Or some sort of function
     //       to do this? Removing won't really be what we want as that would
@@ -614,10 +615,10 @@ static void cecs_archetype_remove_entity(CECS_Archetype* archetype,
     }
 
 
-    int last_entity_index = num_entities - 1;
+    int last_column_index = num_entities - 1;
 
     // Handle easy case of the entity being the last in the archetype.
-    if (entity_index == last_entity_index)
+    if (column == last_column_index)
     {
         chds_vec_pop(archetype->index_to_entity);
         return;
@@ -633,8 +634,8 @@ static void cecs_archetype_remove_entity(CECS_Archetype* archetype,
         uint8_t* component_list = (uint8_t*)(archetype->columns[i]);
         const uint32_t component_size = archetype->signature.infos[i].size;
         
-        const uint32_t component_to_remove = entity_index * component_size;
-        const uint32_t component_to_copy = last_entity_index * component_size;
+        const uint32_t component_to_remove = column * component_size;
+        const uint32_t component_to_copy = last_column_index * component_size;
 
         // Copy the last component over the component we're removing.
         memcpy(component_list + component_to_remove,
@@ -642,6 +643,13 @@ static void cecs_archetype_remove_entity(CECS_Archetype* archetype,
             component_size);
     }
     
+    // Update the entity id to the one we're swapping into the slot.
+    CECS_EntityId moved = archetype->index_to_entity[last_column_index];
+    archetype->index_to_entity[column] = moved;
+
+    // Update the position of the moved entity in the ecs.
+    ecs->entity_indices[moved].column = column;
+
     // 'Remove' the last entity.
     chds_vec_pop(archetype->index_to_entity);
 }
