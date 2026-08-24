@@ -26,11 +26,6 @@ static void cecs_archetype_remove_entity(CECS* ecs,
     CECS_Archetype* archetype,
     int entity_index);
 
-static void invalidate_entity_index(CECS* ecs, CECS_EntityId id);
-
-static uint8_t is_entity_index_valid(CECS_EntityIndex idx);
-
-
 // CECS API
 CECS* cecs_create()
 {
@@ -203,7 +198,8 @@ CECS_EntityId cecs_create_entity(CECS* ecs)
     
     // Initialise entity data.
     ecs->entity_components_bitsets[entity] = CECS_EMPTY_COMPONENTS_BITSET;
-    invalidate_entity_index(ecs, entity);
+    ecs->entity_indices[entity].archetype_id = -1;
+    ecs->entity_indices[entity].column = -1;
 
     // Move the entity to the empty archetype.
     cecs_move_archetype(ecs, entity, INVALID_ARCHETYPE, EMPTY_ARCHETYPE_ID);
@@ -222,7 +218,6 @@ void cecs_destroy_entity(CECS* ecs, CECS_EntityId id)
     const CECS_ComponentsBitset old_bitset = ecs->entity_components_bitsets[id];
     ecs->entity_components_bitsets[id] = CECS_EMPTY_COMPONENTS_BITSET;
 
-    // TODO: use chds_vec
     // Grow capacity if needed.
     if (ecs->free_entities_count == ecs->free_entities_capacity)
     {
@@ -357,13 +352,6 @@ void cecs_remove_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
 void* cecs_get_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
 {
     CECS_EntityIndex ei = ecs->entity_indices[eid];
-
-    if (!is_entity_index_valid(ei))
-    {
-        return 0;
-    }
-
-
     CECS_Archetype* archetype = &ecs->archetypes[ei.archetype_id];
     
     int size = ecs->component_infos[cid].size;
@@ -475,7 +463,6 @@ static CECS_ArchetypeId cecs_create_archetype(CECS* ecs,
     return archetype_id;
 }
 
-// TODO: should internal functions have cecs_ prefix? probably not if static.
 static void cecs_move_archetype(CECS* ecs, CECS_EntityId id, CECS_ArchetypeId old_archetype_id,
     CECS_ArchetypeId new_archetype_id)
 {
@@ -620,9 +607,6 @@ static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype,
     if (entity_index == last_entity_index)
     {
         chds_vec_pop(archetype->index_to_entity);
-
-        // TODO: is it this functions resopnsibility to invalidate the index.
-        invalidate_entity_index(ecs, entity_index);
         return;
     }
 
@@ -651,21 +635,11 @@ static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype,
 
     // TODO: Should this ecs stuff be done elsewhere??????
 
-    // Show entity has been removed from its archetype.
-    invalidate_entity_index(ecs, entity_to_remove);
+    // Update the entity's index in the ecs to reflect it's been removed from its archetype.
+    ecs->entity_indices[entity_to_remove].column = -1;
+    ecs->entity_indices[entity_to_remove].archetype_id = INVALID_ARCHETYPE;
 
     // 'Remove' the last entity.
     chds_vec_pop(archetype->index_to_entity);
 }
 
-// TODO: do i need better naming conventions for internal helpers?
-static void invalidate_entity_index(CECS* ecs, CECS_EntityId id)
-{
-    ecs->entity_indices[id].column = -1;
-    ecs->entity_indices[id].archetype_id = INVALID_ARCHETYPE;
-}
-
-static uint8_t is_entity_index_valid(CECS_EntityIndex idx)
-{
-    return (idx.archetype_id != INVALID_ARCHETYPE && idx.column >= 0);
-}
