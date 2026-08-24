@@ -354,6 +354,12 @@ void cecs_remove_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
 void* cecs_get_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
 {
     CECS_EntityIndex ei = ecs->entity_indices[eid];
+
+    if (!entity_index_valid(ei))
+    {
+        return 0;
+    }
+
     CECS_Archetype* archetype = &ecs->archetypes[ei.archetype_id];
     
     int size = ecs->component_infos[cid].size;
