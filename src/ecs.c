@@ -643,3 +643,7 @@ static void invalidate_entity_index(CECS* ecs, CECS_EntityId id)
 
 }
 
+static uint8_t entity_index_valid(CECS_EntityIndex idx)
+{
+    return idx.archetype_id != INVALID_ARCHETYPE && idx.column >= 0;
+}
