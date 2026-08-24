@@ -218,6 +218,7 @@ void cecs_destroy_entity(CECS* ecs, CECS_EntityId id)
     const CECS_ComponentsBitset old_bitset = ecs->entity_components_bitsets[id];
     ecs->entity_components_bitsets[id] = CECS_EMPTY_COMPONENTS_BITSET;
 
+    // TODO: use chds_vec
     // Grow capacity if needed.
     if (ecs->free_entities_count == ecs->free_entities_capacity)
     {
@@ -352,6 +353,10 @@ void cecs_remove_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
 void* cecs_get_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
 {
     CECS_EntityIndex ei = ecs->entity_indices[eid];
+    // TODO: how do we determine if this entity was destroyed? 
+    // should probably set the value in entity_indices to invalid?
+    // then we can check first and never try access the archetype.
+
     CECS_Archetype* archetype = &ecs->archetypes[ei.archetype_id];
     
     int size = ecs->component_infos[cid].size;
@@ -636,10 +641,14 @@ static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype,
     // TODO: Should this ecs stuff be done elsewhere??????
 
     // Update the entity's index in the ecs to reflect it's been removed from its archetype.
-    ecs->entity_indices[entity_to_remove].column = -1;
-    ecs->entity_indices[entity_to_remove].archetype_id = INVALID_ARCHETYPE;
+    cecs_invalidate_entity_index(ecs, entity_to_remove);
 
     // 'Remove' the last entity.
     chds_vec_pop(archetype->index_to_entity);
 }
 
+static void cecs_invalidate_entity_index(CECS* ecs, CECS_EntityId id)
+{
+    ecs->entity_indices[id].column = -1;
+    ecs->entity_indices[id].archetype_id = INVALID_ARCHETYPE;
+}
