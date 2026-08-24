@@ -22,9 +22,13 @@ static void cecs_archetype_add_entity(const CECS* ecs,
     CECS_Archetype* archetype,
     CECS_EntityId eid);
 
-static void cecs_archetype_remove_entity(CECS* ecs, 
+static void cecs_archetype_remove_entity(
     CECS_Archetype* archetype,
     int entity_index);
+
+static void invalidate_entity_index(CECS* ecs, CECS_EntityId id);
+
+static uint8_t entity_index_valid(CECS_EntityIndex idx);
 
 // CECS API
 CECS* cecs_create()
