@@ -620,6 +620,9 @@ static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype,
     if (entity_index == last_entity_index)
     {
         chds_vec_pop(archetype->index_to_entity);
+
+        // TODO: is it this functions resopnsibility to invalidate the index.
+        invalidate_entity_index(ecs, entity_index);
         return;
     }
 
