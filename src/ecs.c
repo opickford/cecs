@@ -250,6 +250,8 @@ void cecs_destroy_entity(CECS* ecs, CECS_EntityId id)
             break;
         }
     }
+
+    invalidate_entity_index(ecs, id);
 }
 
 void* cecs_add_component(CECS* ecs, CECS_EntityId eid, CECS_ComponentId cid)
@@ -583,7 +585,8 @@ static void cecs_archetype_add_entity(const CECS* ecs, CECS_Archetype* archetype
     }
 }
 
-static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype, 
+// TODO: move to archetype.c
+static void cecs_archetype_remove_entity(CECS_Archetype* archetype, 
     int entity_index)
 {
     // TODO: Implement CHDS_VEC remove functionality. Or some sort of function
@@ -628,18 +631,15 @@ static void cecs_archetype_remove_entity(CECS* ecs, CECS_Archetype* archetype,
             component_list + component_to_copy,
             component_size);
     }
-
-    // Update the entity we've moved's index.
-    const CECS_EntityId entity_to_remove = archetype->index_to_entity[last_entity_index];
-    archetype->index_to_entity[entity_index] = entity_to_remove;
-
-    // TODO: Should this ecs stuff be done elsewhere??????
-
-    // Update the entity's index in the ecs to reflect it's been removed from its archetype.
-    ecs->entity_indices[entity_to_remove].column = -1;
-    ecs->entity_indices[entity_to_remove].archetype_id = INVALID_ARCHETYPE;
-
+    
     // 'Remove' the last entity.
     chds_vec_pop(archetype->index_to_entity);
+}
+
+static void invalidate_entity_index(CECS* ecs, CECS_EntityId id)
+{
+    ecs->entity_indices[id].archetype_id = INVALID_ARCHETYPE;
+    ecs->entity_indices[id].column = -1;
+
 }
 
